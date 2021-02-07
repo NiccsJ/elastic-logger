@@ -18,6 +18,6 @@ Enables ***easy visulatisaion and aggregation*** in ***Kibana*** without the nee
 ## Install ##
 
 ```
-$ npm install @NiccsJ/elastic-logger --save
+$ npm install @niccsj/elastic-logger --save
 ```
 
