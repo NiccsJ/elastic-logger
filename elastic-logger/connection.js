@@ -10,5 +10,4 @@ const client = async (hostsArray) => {
 
 module.exports = {
     client,
-    // client
 };

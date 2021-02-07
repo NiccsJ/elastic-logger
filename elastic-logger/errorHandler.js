@@ -4,7 +4,6 @@ const handleAxiosErrors = async ({ err, date, dateTime, ship = false }) => {
     try {
         let errObj = {};
         if (err.response && err.response.data) {
-            // console.log('errrrrrr---->', err.response);
             errObj = {
                 type: (err.response.data.error && err.response.data.error.type) ? err.response.data.error.type : err.response.data.error ? err.response.data.error : null,
                 reason: (err.response.data.error && err.response.data.error.reason) ? err.response.data.error.reason : null,
@@ -15,13 +14,10 @@ const handleAxiosErrors = async ({ err, date, dateTime, ship = false }) => {
                 allowedMethod: err.response.headers ? err.response.headers.allow : null,
                 logType: 'axios',
                 logDate: date,
-                // logDateTime: dateTime,
                 "@timestamp": dateTime,
                 parsed: true
             };
         } else {
-            // throw Error('@niccsj/elastic-logger: Unknown axios error----->', err);
-            // // console.error('@niccsj/elastic-logger: Unknown axios error----->', err);
             errObj = {
                 title: err,
                 description: 'Unable to parse axios error',
@@ -30,7 +26,6 @@ const handleAxiosErrors = async ({ err, date, dateTime, ship = false }) => {
                 reason: '',
                 logType: 'axios',
                 logDate: date,
-                // logDateTime: dateTime,
                 "@timestamp": dateTime,
                 parsed: false
             };
@@ -47,13 +42,11 @@ const handleNodeError = async ({ err, date, dateTime, ship = false, status = nul
         if (err && err.stack) {
             errObj = {
                 title: err.message ? err.message : err.stack.split("\n")[0],
-                // message: err.message,
                 description: err.stack,
                 logType: 'nodejs',
                 status: status ? status : null,
                 scope: scope ? scope : null,
                 logDate: date,
-                // logDateTime: dateTime,
                 "@timestamp": dateTime,
                 parsed: true
             };
@@ -63,7 +56,6 @@ const handleNodeError = async ({ err, date, dateTime, ship = false, status = nul
                 description: 'Unable to parse nodejs error',
                 logType: 'nodejs',
                 logDate: date,
-                // logDateTime: dateTime,
                 "@timestamp": dateTime,
                 parsed: false
             };
@@ -91,11 +83,9 @@ const errorHandler = async ({ err, type, ship = true, self = false, timezone = '
                 break;
             case 'nodejs':
                 morphedError = await handleNodeError({ err, date, dateTime, ship, status, scope });
-                // console.log('morphedNodeError--->', morphedError);
                 break;
             default:
                 morphedError = await handleNodeError({ err, date, dateTime, ship, status, scope });
-                // console.error(`@niccsj/elastic-logger: Unhandled error type----->`, err);
                 break;
         }
         morphedError.main = '<-----@niccsj/elastic-logger: errorHandler----->';

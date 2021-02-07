@@ -1,4 +1,3 @@
-// const momentTimezone = require('moment-timezone');
 const { bulkIndex } = require('./crudApi');
 const { errorHandler } = require('./errorHandler');
 let errorLogRequestBatch = [];
@@ -13,8 +12,6 @@ const createErrorLogInElastic = async ({ err, url, authType, auth, microServiceN
     }
     scope = scope ? scope : 'manualFunctionCall';
     const log = await errorHandler({ err, type: 'nodejs', ship: true, timezone: timezone, scope });
-    // console.log('morphed log---->', log);
-    // errorLogRequestBatch.push(log);
     if (errorLogRequestBatch.length >= batchSize) {
       const index = brand_name + '_' + microServiceName + '_' + cs_env;
       switch (authType) {
@@ -37,7 +34,6 @@ const createErrorLogInElastic = async ({ err, url, authType, auth, microServiceN
     };
     errorLogRequestBatch.push(log);
   } catch (err) {
-    // console.log('errrr->', err);
     errorHandler({ err, type: 'nodejs', ship: true, scope: '@niccsj/elastic-logger.createErrorLogInElastic' });
   }
 }
