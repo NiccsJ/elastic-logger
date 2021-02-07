@@ -1,5 +1,5 @@
 {
-    "name":"@niccsj/elastic-logger",
+    "name": "@niccsj/elastic-logger",
     "version": "1.0.0",
     "description": "Ships error logs, inbount api logs and outbound api logs to elasticsearch cluster.",
     "license": "MIT",
@@ -9,5 +9,9 @@
         "elastic-logger",
         "elasticsearch-node",
         "npm-elastic-logger"
-    ]
+    ],
+    "dependencies": {
+        "axios": "^0.21.1",
+        "moment-timezone": "^0.5.33"
+    }
 }
