@@ -1,0 +1,13 @@
+{
+    "name":"@niccsj/elastic-logger",
+    "varsion": "1.0.0",
+    "description": "Ships error logs, inbount api logs and outbound api logs to elasticsearch cluster.",
+    "license": "MIT",
+    "repository": "NiccsJ/elastic-logger",
+    "main": "index.js",
+    "keywords": [
+        "elastic-logger",
+        "elasticsearch-node",
+        "npm-elastic-logger"
+    ]
+}
