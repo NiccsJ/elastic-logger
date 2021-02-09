@@ -14,18 +14,10 @@ Enables ***easy visulatisaion and aggregation*** in ***Kibana*** without the nee
   * logDateTime
   * @timestamp
 
-## Pre-Requisits ##
-* A SSL enabled elasticsearch cluster.
-* Minimum 1 master node. Can provide multiple hosts for fault-tolerance.
-* API key or Basic authentication.
-
 
 ## Install ##
+
 ```
-$ npm install @niccsj/elastic-logger --save
+$ npm install @NiccsJ/elastic-logger --save
 ```
 
-## Usage ##
-```
-const elastic-logger = require('@niccsj/elastic-logger');
-```

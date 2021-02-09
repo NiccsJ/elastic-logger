@@ -1,7 +1,7 @@
-const momentTimezone = require('moment-timezone');
-const { bulkIndex } = require('./crudApi');
-// const TIMEZONE = "Asia/Calcutta";
 let outgoingRequestBatch = [];
+const momentTimezone = require('moment-timezone');
+const { bulkIndex } = require('../utils/elasticHandler/elasticApi');
+// const TIMEZONE = "Asia/Calcutta";
 
 const overwriteHttpProtocol = (elasticUrl, microServiceName, brand_name, cs_env, batchSize = 10, TIMEZONE = "Asia/Calcutta") => {
     try {

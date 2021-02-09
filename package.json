@@ -1,18 +1,18 @@
 {
-    "name": "@niccsj/elastic-logger",
-    "version": "2.0.0",
-    "description": "Ships error logs, inbount api logs and outbound api logs to elasticsearch cluster.",
-    "license": "MIT",
-    "repository": "NiccsJ/elastic-logger",
-    "main": "index.js",
-    "keywords": [
-        "elastic-logger",
-        "elasticsearch-node",
-        "npm-elastic-logger"
-    ],
-    "dependencies": {
-        "@elastic/elasticsearch": "^7.10.0",
-        "axios": "^0.21.1",
-        "moment-timezone": "^0.5.33"
-    }
+  "name": "@niccsj/elastic-logger",
+  "version": "2.0.0",
+  "description": "Ships error logs, inbount api logs and outbound api logs to elasticsearch cluster.",
+  "license": "MIT",
+  "repository": "NiccsJ/elastic-logger",
+  "main": "index.js",
+  "keywords": [
+      "elastic-logger",
+      "elasticsearch-node",
+      "npm-elastic-logger"
+  ],
+  "dependencies": {
+      "@elastic/elasticsearch": "^7.10.0",
+      "axios": "^0.21.1",
+      "moment-timezone": "^0.5.33"
+  }
 }

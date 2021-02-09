@@ -1,5 +1,5 @@
 const momentTimezone = require('moment-timezone');
-const { bulkIndex } = require('./crudApi');
+const { bulkIndex } = require('../utils/elasticHandler/elasticApi');
 // const TIMEZONE = "Asia/Calcutta";
 let incomingRequestBatch = [];
 
