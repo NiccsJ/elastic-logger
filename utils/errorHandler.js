@@ -60,6 +60,7 @@ const morphError = async ({ err, date, dateTime, ship = false, status = null, sc
                 description: err.stack,
                 status: status ? status : null,
                 scope: scope ? scope : null,
+                type: err.type ? err.type : null,
                 // logType: 'nodejs',
                 logDate: date,
                 // logDateTime: dateTime,
@@ -69,7 +70,7 @@ const morphError = async ({ err, date, dateTime, ship = false, status = null, sc
         } else if (err.response && err.response.data) {
             errObj = {
                 name: err.name ? err.name : null,
-                type: (err.response.data.error && err.response.data.error.type) ? err.response.data.error.type : err.response.data.error ? err.response.data.error : null,
+                type: (err.response.data.error && err.response.data.error.type) ? err.response.data.error.type : err.response.data.error ? err.response.data.error : err.type ? err.type : null,
                 reason: (err.response.data.error && err.response.data.error.reason) ? err.response.data.error.reason : null,
                 url: (err.response.config && err.response.config.url) ? err.response.config.url : null,
                 errorHeader: (err.response.data.error && err.response.data.error.header) ? err.response.data.error.header : null,
@@ -90,6 +91,7 @@ const morphError = async ({ err, date, dateTime, ship = false, status = null, sc
                 description: 'Unable to parse error',
                 status: status ? status : 0,
                 scope: scope ? scope : null,
+                type: err.type ? err.type : null,
                 // logType: 'nodejs',
                 logDate: date,
                 // logDateTime: dateTime,
@@ -116,24 +118,10 @@ const errorHandler = async ({ err, ship = true, self = false, timezone = 'Asia/C
         const dateTime = momentTimezone().tz(TIMEZONE).format();
         const morphedError = {};
         morphedError.main = '<-----@niccsj/elastic-logger: errorHandler----->';
-        // switch (type) {
-        //     // case 'axios':
-        //     //     morphedError = await handleAxiosErrors({ err, date, dateTime, ship, scope });
-        //     //     break;
-        //     case 'nodejs':
         morphedError.data = await morphError({ err, date, dateTime, ship, status, scope });
-        //         // console.log('morphedNodeError--->', morphedError);
-        //         break;
-        //     default:
-        //         morphedError = await handleNodeError({ err, date, dateTime, ship, status, scope });
-        //         // console.error(`@niccsj/elastic-logger: Unhandled error type----->`, err);
-        //         break;
-        // }
-        // morphedError.main = '<-----@niccsj/elastic-logger: errorHandler----->';
         console.error('\n' + JSON.stringify(morphedError) + '\n');
 
-
-        if (false) {
+        if (ship) {
             console.log('<-----shipping this log to es----->');
             return morphedError.data;
         }
