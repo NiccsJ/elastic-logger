@@ -11,6 +11,7 @@
         "npm-elastic-logger"
     ],
     "dependencies": {
+        "@elastic/elasticsearch": "^7.10.0",
         "axios": "^0.21.1",
         "moment-timezone": "^0.5.33"
     }
