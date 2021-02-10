@@ -5,6 +5,8 @@ const checkSuppliedArguments = async ({ err, esConnObj, microServiceName, brand_
         let argsValid = false;
         if (!err || !esConnObj || !microServiceName || !brand_name || !cs_env) {
             throw new elasticError({ name: 'Argument(s) validation error:', message: `Please supply all required arguments: err, esConnObj, microServiceName, brand_name, cs_env`, type: 'nodejs', status: 998 });
+        } else if (esConnObj === true) {
+            argsValid = true;
         } else {
             if ((esConnObj && !(esConnObj.authType == 'none' || esConnObj.authType == 'basic' || esConnObj.authType == 'api'))) {
                 throw new elasticError({ name: 'Argument(s) validation error:', message: `Invalid authType specified: '${esConnObj.authType}'. Allowed values are: 'none', 'basic', 'api'.`, type: 'nodejs', status: 998 });
@@ -25,5 +27,5 @@ const checkSuppliedArguments = async ({ err, esConnObj, microServiceName, brand_
 };
 
 module.exports = {
-    checkSuppliedArguments
+    checkSuppliedArguments,
 };

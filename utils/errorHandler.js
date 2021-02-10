@@ -9,6 +9,13 @@ class elasticError extends Error {
     };
 };
 
+class elasticLogger extends elasticError {
+    constructor({ name, message, type = 'nodejs', status }) {
+        super({ name, message, type , status });
+
+    };
+}
+
 const handleAxiosErrors = async ({ err, date, dateTime, ship = false, scope }) => {
     try {
         let errObj = {};
@@ -121,7 +128,7 @@ const errorHandler = async ({ err, ship = true, self = false, timezone = 'Asia/C
         morphedError.data = await morphError({ err, date, dateTime, ship, status, scope });
         console.error('\n' + JSON.stringify(morphedError) + '\n');
 
-        if (ship) {
+        if (ship) { //should be able to ship when invoked from catch as well.
             console.log('<-----shipping this log to es----->');
             return morphedError.data;
         }
