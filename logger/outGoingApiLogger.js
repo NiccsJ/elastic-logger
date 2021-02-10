@@ -1,41 +1,8 @@
 let outgoingRequestBatch = [];
 const momentTimezone = require('moment-timezone');
 const { bulkIndex } = require('../utils/elasticHandler/elasticApi');
-// const TIMEZONE = "Asia/Calcutta";
+const { errorHandler, elasticError } = require('../utils/errorHandler');
 
-const overwriteHttpProtocol = (elasticUrl, microServiceName, brand_name, cs_env, batchSize = 10, TIMEZONE = "Asia/Calcutta") => {
-    try {
-        let httpObj = require('http');
-        let httpsObj = require('https');
-
-        let patch = function (object) {
-            let original = object.request;
-
-            object.request = function (options, callback) {
-                const requestStart = Date.now();
-
-                let newCallback = function () {
-                    let res = arguments[0];
-                    let urlArray1 = elasticUrl.split("//");
-                    let urlArray2 = urlArray1[1].split(":");
-                    let hostname = urlArray2[0];
-                    if (options && options.hostname !== hostname) {
-                        let href = options.href ? options.href : options.hostname + options.path;
-                        outBoundApiLogger(href, requestStart, res.statusCode, elasticUrl, microServiceName, brand_name, cs_env, batchSize);
-                    }
-                    if (callback) {
-                        callback.apply(this, arguments);
-                    }
-                }
-                let req = original(options, newCallback);
-                return req;
-            }
-        }
-        patch(httpObj);
-        patch(httpsObj);
-    } catch (err) {
-    }
-}
 
 const outBoundApiLogger = (href, requestStart, statusCode, elasticUrl, microServiceName, brand_name, cs_env, batchSize) => {
     try {
@@ -63,21 +30,45 @@ const outBoundApiLogger = (href, requestStart, statusCode, elasticUrl, microServ
             url: href,
             statusCode: statusCode,
             logDate: date,
-            logDateTime: dateTime,
+            // logDateTime: dateTime,
             "@timestamp": dateTime,
         };
         if (elasticUrl) {
+            outgoingRequestBatch.push(logObject);
             if (outgoingRequestBatch.length >= batchSize) {
                 let index = microServiceName + '_' + brand_name + '_' + cs_env + '_external_api';
                 bulkIndex(outgoingRequestBatch, index, elasticUrl);
                 outgoingRequestBatch = [];
             }
-            outgoingRequestBatch.push(logObject);
         }
-    } catch (error) {
+    } catch (err) {
+        errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.outBoundApiLogger' });
     }
 }
 
 module.exports = {
-    overwriteHttpProtocol
+    outBoundApiLogger
 }
+
+        // const patch = (object) => {
+        //     const original = object.request;
+        //     object.request = (options, callback) => {
+        //         const requestStart = Date.now();
+
+        //         let newCallback = function () {
+        //             let res = arguments[0];
+        //             let urlArray1 = elasticUrl.split("//");
+        //             let urlArray2 = urlArray1[1].split(":");
+        //             let hostname = urlArray2[0];
+        //             if (options && options.hostname !== hostname) {
+        //                 let href = options.href ? options.href : options.hostname + options.path;
+        //                 outBoundApiLogger(href, requestStart, res.statusCode, elasticUrl, microServiceName, brand_name, cs_env, batchSize);
+        //             }
+        //             if (callback) {
+        //                 callback.apply(this, arguments);
+        //             }
+        //         }
+        //         let req = original(options, newCallback);
+        //         return req;
+        //     }
+        // }

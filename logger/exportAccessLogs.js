@@ -1,37 +1,50 @@
+let incomingRequestBatch = [];
 const momentTimezone = require('moment-timezone');
 const { bulkIndex } = require('../utils/elasticHandler/elasticApi');
-// const TIMEZONE = "Asia/Calcutta";
-let incomingRequestBatch = [];
+const { checkSuppliedArguments } = require('../utils/utilities');
+const { errorHandler, elasticError } = require('../utils/errorHandler');
 
-const exportAccessLogs = (elasticUrl, microServiceName, brand_name, cs_env, batchSize = 10, TIMEZONE = "Asia/Calcutta") => {
+
+//to-do add  a way for argument validation
+const exportAccessLogs = ({ microServiceName, brand_name, cs_env, batchSize = 10, timezone = 'Asia/Calcutta' }) => {
     return function (req, res, next) {
-        try {
-            const requestStart = Date.now();
+        try {  
             res.on('finish', () => {
-                let processingTime = Date.now() - requestStart;
-                let date = momentTimezone().tz(TIMEZONE).startOf('day').format('YYYY-MM-DD');
-                let dateTime = momentTimezone().tz(TIMEZONE).format();
-                const { method, url } = req;
-                let logObject = {
-                    processingTime,
-                    method,
+                const requestStart = Date.now();
+                const { headers, httpVersion, method, socket, url } = req;
+                const { remoteAddress, remoteFamily } = socket; 
+                const { statusCode, statusMessage } = res;
+                const headers = response.getHeaders();
+                const processingTime = Date.now() - requestStart;
+                const date = momentTimezone().tz(timezone).startOf('day').format('YYYY-MM-DD');
+                const dateTime = momentTimezone().tz(timezone).format();
+                const logObject = { // move to a separate parser
                     url,
-                    statusCode: res.statusCode,
+                    method,
+                    headers,
+                    remoteAddress,
+                    remoteFamily,
+                    statusCode,
+                    statusMessage,
+                    processingTime,
+                    // reqOrigin: (req['headers'] && req['headers']['host']) ? req['headers']['host'] : undefined,
+                    // reqAgent: (req['headers'] && req['headers']['user-agent']) ? req['headers']['user-agent'] : undefined,
+                    // logDateTime: dateTime,
                     logDate: date,
-                    logDateTime: dateTime,
                     "@timestamp": dateTime
                 };
-                if (elasticUrl) {
-                    if (incomingRequestBatch.length >= batchSize) {
-                        let index = microServiceName + '_' + brand_name + '_' + cs_env + '_access_logs';
-                        bulkIndex(incomingRequestBatch, index, elasticUrl);
-                        incomingRequestBatch = [];
-                    }
-                    incomingRequestBatch.push(logObject);
+                console.log('logObject------------->', logObject);
+                incomingRequestBatch.push(logObject);
+                if (incomingRequestBatch.length >= batchSize) {
+                    let index = brand_name + '_' + microServiceName + '_' + cs_env + '_access_logs';
+                    bulkIndex(incomingRequestBatch, index);
+                    incomingRequestBatch = [];
                 }
             });
             next();
         } catch (err) {
+            errorHandler({ err, ship: true, scope: '@niccsj/elastic-logger.exportAccessLogs' });
+            next();
         }
     }
 }
