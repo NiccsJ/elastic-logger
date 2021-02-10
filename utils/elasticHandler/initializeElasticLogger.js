@@ -1,7 +1,7 @@
 const esClientObj = {};
-const { checkSuppliedArguments } = require('@niccsj/elastic-logger/utils/utilities');
 const elasticsearch = require('@elastic/elasticsearch');
-const { errorHandler, elasticError } = require('@niccsj/elastic-logger/utils/errorHandler');
+const { checkSuppliedArguments } = require('../utilities');
+const { errorHandler, elasticError } = require('../errorHandler');
 
 const connection = async (esConnObj) => {
 	try {

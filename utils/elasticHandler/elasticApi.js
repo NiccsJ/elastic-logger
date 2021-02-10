@@ -1,5 +1,5 @@
 const { esClientObj } = require('./initializeElasticLogger');
-const { errorHandler, elasticError } = require('@niccsj/elastic-logger/utils/errorHandler');
+const { errorHandler, elasticError } = require('../errorHandler');
 
 
 const bulkIndex = async (data, index) => {
@@ -13,7 +13,7 @@ const bulkIndex = async (data, index) => {
         if (bulkResponse.error) {
             throw new elasticError({ name: 'ElasticAPI error:', message: `Unable to shipt logs .via bulkIndex API`, type: 'elasticsearch', status: 888 });
         }
-
+//handle error
         console.log('bulkResponse---->', bulkResponse);
     } catch (err) {
         errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.bulkIndex' });

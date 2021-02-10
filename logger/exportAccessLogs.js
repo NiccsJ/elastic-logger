@@ -8,22 +8,29 @@ const { errorHandler, elasticError } = require('../utils/errorHandler');
 //to-do add  a way for argument validation
 const exportAccessLogs = ({ microServiceName, brand_name, cs_env, batchSize = 10, timezone = 'Asia/Calcutta' }) => {
     return function (req, res, next) {
-        try {
-            const requestStart = Date.now();
+        try {  
             res.on('finish', () => {
+                const requestStart = Date.now();
+                const { headers, httpVersion, method, socket, url } = req;
+                const { remoteAddress, remoteFamily } = socket; 
+                const { statusCode, statusMessage } = res;
+                const headers = response.getHeaders();
                 const processingTime = Date.now() - requestStart;
                 const date = momentTimezone().tz(timezone).startOf('day').format('YYYY-MM-DD');
                 const dateTime = momentTimezone().tz(timezone).format();
-                const { method, url } = req;
                 const logObject = { // move to a separate parser
-                    processingTime,
-                    method,
                     url,
-                    reqOrigin: (req['headers'] && req['headers']['host']) ? req['headers']['host'] : undefined,
-                    reqAgent: (req['headers'] && req['headers']['user-agent']) ? req['headers']['user-agent'] : undefined,
-                    statusCode: res.statusCode,
-                    logDate: date,
+                    method,
+                    headers,
+                    remoteAddress,
+                    remoteFamily,
+                    statusCode,
+                    statusMessage,
+                    processingTime,
+                    // reqOrigin: (req['headers'] && req['headers']['host']) ? req['headers']['host'] : undefined,
+                    // reqAgent: (req['headers'] && req['headers']['user-agent']) ? req['headers']['user-agent'] : undefined,
                     // logDateTime: dateTime,
+                    logDate: date,
                     "@timestamp": dateTime
                 };
                 console.log('logObject------------->', logObject);

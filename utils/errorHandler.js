@@ -11,7 +11,7 @@ class elasticError extends Error {
 
 class elasticLogger extends elasticError {
     constructor({ name, message, type = 'nodejs', status }) {
-        super({ name, message, type , status });
+        super({ name, message, type, status });
 
     };
 }
@@ -113,13 +113,10 @@ const morphError = async ({ err, date, dateTime, ship = false, status = null, sc
 
 };
 
-const errorHandler = async ({ err, ship = true, self = false, timezone = 'Asia/Calcutta', scope = '@niccsj/elastic-logger', status = null }) => {
+const errorHandler = async ({ err, ship = true, self = false, timezone = 'Asia/Calcutta', scope = '@niccsj/elastic-logger', status = null, exporter = false }) => {
     try {
         console.log('ship, self, timezone, scope', ship, self, timezone, scope);
-        if (self) { //gaurd clause
-            console.error('errrrrrr-------->', err);
-            return;
-        }
+        if (self) return; //gaurd clause
         const TIMEZONE = timezone;
         const date = momentTimezone().tz(TIMEZONE).startOf('day').format('YYYY-MM-DD');
         const dateTime = momentTimezone().tz(TIMEZONE).format();
