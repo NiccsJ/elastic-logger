@@ -1,4 +1,6 @@
-const { outBoundApiLogger } = require('../logger/outGoingApiLogger'); 
+let batchRequest = [];
+const { bulkIndex } = require('./elasticHandler/elasticApi');
+const { outBoundApiLogger } = require('../logger/outGoingApiLogger');
 const { errorHandler, elasticError } = require('./errorHandler');
 
 const checkSuppliedArguments = async ({ err, esConnObj, microServiceName, brand_name, cs_env, batchSize, timezone, scope }) => {
@@ -27,11 +29,10 @@ const checkSuppliedArguments = async ({ err, esConnObj, microServiceName, brand_
     }
 };
 
-const overwriteHttpProtocol = (elasticUrl, microServiceName, brand_name, cs_env, batchSize = 10, TIMEZONE = "Asia/Calcutta") => {
+const overwriteHttpProtocol = ({ microServiceName, brand_name, cs_env, batchSize = 10, TIMEZONE = "Asia/Calcutta" }) => {
     try {
         const httpObj = require('http');
         const httpsObj = require('https');
-
         const patch = (object) => {
             const original = object.request;
             object.request = (options, callback) => {
@@ -44,7 +45,7 @@ const overwriteHttpProtocol = (elasticUrl, microServiceName, brand_name, cs_env,
                     let hostname = urlArray2[0];
                     if (options && options.hostname !== hostname) {
                         let href = options.href ? options.href : options.hostname + options.path;
-                        outBoundApiLogger(href, requestStart, res.statusCode, elasticUrl, microServiceName, brand_name, cs_env, batchSize);
+                        outBoundApiLogger({ href, requestStart, res: res.statusCode, microServiceName, brand_name, cs_env, batchSize });
                     }
                     if (callback) {
                         callback.apply(this, arguments);
@@ -58,11 +59,29 @@ const overwriteHttpProtocol = (elasticUrl, microServiceName, brand_name, cs_env,
         patch(httpObj);
         patch(httpsObj);
     } catch (err) {
-        errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.overwriteHttpProtocol' });
+        errorHandler({ err, ship: true, scope: '@niccsj/elastic-logger.overwriteHttpProtocol' });
     }
 }
 
+const shipDataToElasticsearh = async ({ log, batchSize, brand_name, cs_env, microServiceName, checkArgs = false }) => {
+    try {
+        // console.log('log in shipper----->', log, batchSize);
+        if (checkArgs) await checkSuppliedArguments({ err: 'api/access logs', esConnObj: true, microServiceName, brand_name, cs_env });
+        const index = brand_name + '_' + microServiceName + '_' + cs_env;
+        batchRequest.push(log);
+        console.log('currentBatchSize, totalBatchSize:', batchRequest.length, batchSize);
+        if (batchRequest.length >= batchSize) {
+            bulkIndex(batchRequest, index);
+            batchRequest = [];
+        }
+    } catch (err) {
+        errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.shipDataToElasticsearh' });
+    }
+
+};
+
 module.exports = {
     checkSuppliedArguments,
-    overwriteHttpProtocol
+    overwriteHttpProtocol,
+    shipDataToElasticsearh
 };

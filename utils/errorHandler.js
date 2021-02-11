@@ -1,4 +1,5 @@
 const momentTimezone = require('moment-timezone');
+let { checkSuppliedArguments, shipDataToElasticsearh } = require('./utilities');
 
 class elasticError extends Error {
     constructor({ name, message, type = 'nodejs', status }) {
@@ -9,10 +10,10 @@ class elasticError extends Error {
     };
 };
 
-class elasticLogger extends elasticError {
-    constructor({ name, message, type = 'nodejs', status }) {
+class esError extends elasticError {
+    constructor({ name, message, description, type = 'elasticsearch', status }) {
         super({ name, message, type, status });
-
+        this.description = description;
     };
 }
 
@@ -64,13 +65,12 @@ const morphError = async ({ err, date, dateTime, ship = false, status = null, sc
             errObj = {
                 name: err.name ? err.name : null,
                 message: err.message ? err.message : err.stack.split("\n")[0],
-                description: err.stack,
+                description: err.description ? err.description : err.stack,
                 status: status ? status : null,
                 scope: scope ? scope : null,
                 type: err.type ? err.type : null,
-                // logType: 'nodejs',
+                logType: 'errorLogs',
                 logDate: date,
-                // logDateTime: dateTime,
                 "@timestamp": dateTime,
                 parsed: true
             };
@@ -85,9 +85,8 @@ const morphError = async ({ err, date, dateTime, ship = false, status = null, sc
                 statusText: err.response.statusText ? err.response.statusText : null,
                 allowedMethod: err.response.headers ? err.response.headers.allow : null,
                 scope: scope ? scope : null,
-                // logType: 'axios',
+                logType: 'errorLogs',
                 logDate: date,
-                // logDateTime: dateTime,
                 "@timestamp": dateTime,
                 parsed: true
             };
@@ -99,9 +98,8 @@ const morphError = async ({ err, date, dateTime, ship = false, status = null, sc
                 status: status ? status : 0,
                 scope: scope ? scope : null,
                 type: err.type ? err.type : null,
-                // logType: 'nodejs',
+                logType: 'errorLogs',
                 logDate: date,
-                // logDateTime: dateTime,
                 "@timestamp": dateTime,
                 parsed: false
             };
@@ -113,21 +111,24 @@ const morphError = async ({ err, date, dateTime, ship = false, status = null, sc
 
 };
 
-const errorHandler = async ({ err, ship = true, self = false, timezone = 'Asia/Calcutta', scope = '@niccsj/elastic-logger', status = null, exporter = false }) => {
+const errorHandler = async ({ err, ship = true, self = false, timezone = 'Asia/Calcutta', scope = '@niccsj/elastic-logger', status = null, exporter = false, brand_name = process.env.BRAND_NAME, cs_env = process.env.CS_ENV, microServiceName = process.env.MS_NAME }) => {
     try {
-        console.log('ship, self, timezone, scope', ship, self, timezone, scope);
         if (self) return; //gaurd clause
-        const TIMEZONE = timezone;
-        const date = momentTimezone().tz(TIMEZONE).startOf('day').format('YYYY-MM-DD');
-        const dateTime = momentTimezone().tz(TIMEZONE).format();
+        console.log('ship, self, timezone, scope', ship, self, timezone, scope);
+        const date = momentTimezone().tz(timezone).startOf('day').format('YYYY-MM-DD');
+        const dateTime = momentTimezone().tz(timezone).format();
+
         const morphedError = {};
         morphedError.main = '<-----@niccsj/elastic-logger: errorHandler----->';
         morphedError.data = await morphError({ err, date, dateTime, ship, status, scope });
+
         console.error('\n' + JSON.stringify(morphedError) + '\n');
 
         if (ship) { //should be able to ship when invoked from catch as well.
-            console.log('<-----shipping this log to es----->');
-            return morphedError.data;
+            console.log('ship, exporter', ship, exporter);
+            if (exporter) return morphedError.data;
+            if(!shipDataToElasticsearh) shipDataToElasticsearh = require('./utilities').shipDataToElasticsearh;
+            shipDataToElasticsearh({ log: morphedError.data, batchSize: 10, brand_name, cs_env, microServiceName, checkArgs: true });
         }
 
     } catch (err) {
@@ -137,5 +138,6 @@ const errorHandler = async ({ err, ship = true, self = false, timezone = 'Asia/C
 
 module.exports = {
     errorHandler,
-    elasticError
+    elasticError,
+    esError
 };

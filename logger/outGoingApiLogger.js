@@ -2,12 +2,15 @@ let outgoingRequestBatch = [];
 const momentTimezone = require('moment-timezone');
 const { bulkIndex } = require('../utils/elasticHandler/elasticApi');
 const { errorHandler, elasticError } = require('../utils/errorHandler');
+const { checkSuppliedArguments, shipDataToElasticsearh } = require('../utils/utilities');
 
 
-const outBoundApiLogger = (href, requestStart, statusCode, elasticUrl, microServiceName, brand_name, cs_env, batchSize) => {
+
+const outBoundApiLogger = ({ href, requestStart, statusCode, microServiceName, brand_name, cs_env, batchSize }) => {
     try {
         let processingTime = Date.now() - requestStart;
         const NUMERIC_REGEXP = /[4-9]{1}[0-9]{9}/g;
+        console.log('href in outgoing logger----->', href);
         if (href) {
             let hrefComponents = href.split('/');
             let lastComponent = hrefComponents[hrefComponents.length - 1];
@@ -37,7 +40,7 @@ const outBoundApiLogger = (href, requestStart, statusCode, elasticUrl, microServ
             outgoingRequestBatch.push(logObject);
             if (outgoingRequestBatch.length >= batchSize) {
                 let index = microServiceName + '_' + brand_name + '_' + cs_env + '_external_api';
-                bulkIndex(outgoingRequestBatch, index, elasticUrl);
+                bulkIndex(outgoingRequestBatch, index);
                 outgoingRequestBatch = [];
             }
         }
