@@ -1,5 +1,5 @@
-const esClientObj = {};
 let argsValid = false;
+const esClientObj = {};
 const elasticsearch = require('@elastic/elasticsearch');
 const { checkSuppliedArguments } = require('../utilities');
 const { errorHandler, elasticError } = require('../errorHandler');
@@ -37,17 +37,16 @@ const connection = async (esConnObj) => {
 	}
 };
 
-const initializeElasticLogger = async ({ esConnObj }) => {
+const initializeElasticLogger = async ({ esConnObj, brand_name = 'default', cs_env = 'dev', microServiceName = 'default', batchSize = 10, timezone = 'Asia/Calcutta' }) => {
 	try {
-		if (!argsValid) argsValid = await checkSuppliedArguments({ err: 'initializing', esConnObj, microServiceName: 'i', brand_name: 'i', cs_env: 'i' });
+		if (!argsValid) argsValid = await checkSuppliedArguments({ err: 'initializing', esConnObj, microServiceName, brand_name, cs_env });
 		if (!argsValid) throw new elasticError({ name: 'Initialization failed: ', message: `elastic-logger could not be initialized`, type: 'elastic-logger', status: 999 });
 		if (esClientObj && !esClientObj.client) esClientObj.client = await connection(esConnObj);
+		esClientObj.details = esConnObj;
 		esClientObj.status = true; //is it needed?
-		return true; //is this needed?
 	} catch (err) {
 		errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.initializeElasticLogger' });
 		esClientObj.status = false;
-		return false;
 	}
 }
 

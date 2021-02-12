@@ -2,6 +2,7 @@ let incomingRequestBatch = [];
 const momentTimezone = require('moment-timezone');
 const { checkSuppliedArguments, shipDataToElasticsearh } = require('../utils/utilities');
 const { errorHandler, elasticError } = require('../utils/errorHandler');
+
 const exportAccessLogs = ({ microServiceName, brand_name, cs_env, batchSize = 10, timezone = 'Asia/Calcutta' }) => {
     return (req, res, next) => {
         try {
@@ -29,6 +30,7 @@ const exportAccessLogs = ({ microServiceName, brand_name, cs_env, batchSize = 10
                         logDate: date,
                         "@timestamp": dateTime
                     };
+
                     shipDataToElasticsearh({ log, batchSize, brand_name, microServiceName, cs_env, checkArgs: true });
 
                 } catch (err) {

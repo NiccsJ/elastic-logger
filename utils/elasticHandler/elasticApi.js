@@ -1,4 +1,4 @@
-const { esClientObj } = require('./initializeElasticLogger');
+let client;
 const { errorHandler, elasticError, esError } = require('../errorHandler');
 
 // const createIndex = async (index, mappings) => {
@@ -30,7 +30,7 @@ const { errorHandler, elasticError, esError } = require('../errorHandler');
 
 const bulkIndex = async (logs, index) => {
     try {
-        let client = (esClientObj && esClientObj.client) ? esClientObj.client : null;
+        // let client = (esClientObj && esClientObj.client) ? esClientObj.client : null;
         if (!client) client = require('./initializeElasticLogger').esClientObj.client;
 
         const body = logs.flatMap(log => [{ index: { _index: index } }, log]);

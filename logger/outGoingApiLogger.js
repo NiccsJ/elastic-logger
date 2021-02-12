@@ -1,13 +1,63 @@
-let outgoingRequestBatch = [];
+let argsValid;
 const momentTimezone = require('moment-timezone');
-const { bulkIndex } = require('../utils/elasticHandler/elasticApi');
 const { errorHandler, elasticError } = require('../utils/errorHandler');
 const { checkSuppliedArguments, shipDataToElasticsearh } = require('../utils/utilities');
 
-
-
-const outBoundApiLogger = ({ href, requestStart, statusCode, microServiceName, brand_name, cs_env, batchSize }) => {
+const overwriteHttpProtocol = ({ microServiceName, brand_name, cs_env, batchSize = 10, TIMEZONE = "Asia/Calcutta", esConnObj }) => {
     try {
+        let url = (esConnObj && esConnObj.url) ? esConnObj.url : process.env.elasticUrl;
+        if (!url) throw new elasticError({ name: 'Initialization failed:', message: `overwriteHttpProtocol: 'elasticUrl' argument missing`, type: 'elastic-logger', status: 999 });
+        const urls = url.split(',');
+        const httpObj = require('http');
+        const httpsObj = require('https');
+        const patch = (object) => {
+            try {
+                const original = object.request;
+                object.request = (options, callback) => {
+                    try {
+                        const requestStart = Date.now();
+                        function newCallback () {
+                            try {
+                                const res = arguments[0];
+                                const ipPorts = urls.map(url => { return url.split("//")[1] });
+                                const ips = ipPorts.map(ipPort => { return ipPort.split(":")[0] });
+                                const hostname = ips;
+                                console.log('hostname, options--------->', hostname, options.hostname);
+                                if (options && options.hostname && !hostname.includes(options.hostname)) {
+                                    console.log('hostname, options--------->', hostname, options.hostname);
+                                    let href = options.href ? options.href : options.hostname + options.path;
+                                    outBoundApiLogger({ href, requestStart, res: res.statusCode, microServiceName, brand_name, cs_env, batchSize, esConnObj });
+                                }
+                                if (callback) {
+                                    callback.apply(this, arguments);
+                                }
+                            } catch (err) {
+                                errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.overwriteHttpProtocol.patch.object.request.newCallback' });
+                            }
+                        };
+                        let req = original(options, newCallback);
+                        return req;
+                    } catch (err) {
+                        errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.overwriteHttpProtocol.patch.object.request' });
+                        return req;
+                    }
+                };
+            } catch (err) {
+                errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.overwriteHttpProtocol.patch' });
+            }
+        };
+
+        patch(httpObj);
+        patch(httpsObj);
+    } catch (err) {
+        errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.overwriteHttpProtocol' });
+    }
+}
+
+const outBoundApiLogger = async ({ href, requestStart, statusCode, microServiceName, brand_name, cs_env, batchSize, esConnObj }) => {
+    try {
+        if (!argsValid) argsValid = await checkSuppliedArguments({ err: 'outGoingLogs', esConnObj, microServiceName, brand_name, cs_env });
+        if (!argsValid) throw new elasticError({ name: 'Initialization failed:', message: `exportErrorLogs: Argument(s) missing`, type: 'elastic-logger', status: 999 });
         let processingTime = Date.now() - requestStart;
         const NUMERIC_REGEXP = /[4-9]{1}[0-9]{9}/g;
         console.log('href in outgoing logger----->', href);
@@ -28,7 +78,7 @@ const outBoundApiLogger = ({ href, requestStart, statusCode, microServiceName, b
 
         let date = momentTimezone().tz(TIMEZONE).startOf('day').format('YYYY-MM-DD');
         let dateTime = momentTimezone().tz(TIMEZONE).format();
-        let logObject = {
+        let log = {
             processingTime,
             url: href,
             statusCode: statusCode,
@@ -36,42 +86,13 @@ const outBoundApiLogger = ({ href, requestStart, statusCode, microServiceName, b
             // logDateTime: dateTime,
             "@timestamp": dateTime,
         };
-        if (elasticUrl) {
-            outgoingRequestBatch.push(logObject);
-            if (outgoingRequestBatch.length >= batchSize) {
-                let index = microServiceName + '_' + brand_name + '_' + cs_env + '_external_api';
-                bulkIndex(outgoingRequestBatch, index);
-                outgoingRequestBatch = [];
-            }
-        }
+        shipDataToElasticsearh({ log, batchSize, brand_name, microServiceName, cs_env, checkArgs: true });
+
     } catch (err) {
         errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.outBoundApiLogger' });
     }
 }
 
 module.exports = {
-    outBoundApiLogger
+    overwriteHttpProtocol
 }
-
-        // const patch = (object) => {
-        //     const original = object.request;
-        //     object.request = (options, callback) => {
-        //         const requestStart = Date.now();
-
-        //         let newCallback = function () {
-        //             let res = arguments[0];
-        //             let urlArray1 = elasticUrl.split("//");
-        //             let urlArray2 = urlArray1[1].split(":");
-        //             let hostname = urlArray2[0];
-        //             if (options && options.hostname !== hostname) {
-        //                 let href = options.href ? options.href : options.hostname + options.path;
-        //                 outBoundApiLogger(href, requestStart, res.statusCode, elasticUrl, microServiceName, brand_name, cs_env, batchSize);
-        //             }
-        //             if (callback) {
-        //                 callback.apply(this, arguments);
-        //             }
-        //         }
-        //         let req = original(options, newCallback);
-        //         return req;
-        //     }
-        // }
