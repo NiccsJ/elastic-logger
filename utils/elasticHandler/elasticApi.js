@@ -1,6 +1,9 @@
 let client;
 const { errorHandler, elasticError, esError } = require('../errorHandler');
 
+
+//to-do add create index, get index, index mapping, ilm
+
 // const createIndex = async (index, mappings) => {
 
 // };

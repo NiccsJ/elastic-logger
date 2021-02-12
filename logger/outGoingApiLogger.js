@@ -3,7 +3,7 @@ const momentTimezone = require('moment-timezone');
 const { errorHandler, elasticError } = require('../utils/errorHandler');
 const { checkSuppliedArguments, shipDataToElasticsearh } = require('../utils/utilities');
 
-const overwriteHttpProtocol = ({ microServiceName, brand_name, cs_env, batchSize = 10, TIMEZONE = "Asia/Calcutta", esConnObj }) => {
+const overwriteHttpProtocol = ({ microServiceName, brand_name, cs_env, batchSize = 10, timezone = "Asia/Calcutta", esConnObj }) => {
     try {
         if (!argsValid) argsValid = await checkSuppliedArguments({ err: 'outGoingLogs', esConnObj, microServiceName, brand_name, cs_env });
         if (!argsValid) throw new elasticError({ name: 'Initialization failed:', message: `exportErrorLogs: Argument(s) missing`, type: 'elastic-logger', status: 999 });
@@ -28,7 +28,7 @@ const overwriteHttpProtocol = ({ microServiceName, brand_name, cs_env, batchSize
                                 if (options && options.hostname && !hostname.includes(options.hostname)) {
                                     console.log('hostname, options--------->', hostname, options.hostname);
                                     let href = options.href ? options.href : options.hostname + options.path;
-                                    outBoundApiLogger({ href, requestStart, res: res.statusCode, microServiceName, brand_name, cs_env, batchSize, esConnObj });
+                                    outBoundApiLogger({ href, requestStart, res: res.statusCode, microServiceName, brand_name, cs_env, batchSize, timezone });
                                 }
                                 if (callback) {
                                     callback.apply(this, arguments);
@@ -56,15 +56,15 @@ const overwriteHttpProtocol = ({ microServiceName, brand_name, cs_env, batchSize
     }
 }
 
-const outBoundApiLogger = async ({ href, requestStart, statusCode, microServiceName, brand_name, cs_env, batchSize, esConnObj }) => {
+const outBoundApiLogger = async ({ href, requestStart, statusCode, microServiceName, brand_name, cs_env, batchSize, timezone }) => {
     try {
-        let processingTime = Date.now() - requestStart;
+        const processingTime = Date.now() - requestStart;
         const NUMERIC_REGEXP = /[4-9]{1}[0-9]{9}/g;
         console.log('href in outgoing logger----->', href);
         if (href) {
-            let hrefComponents = href.split('/');
-            let lastComponent = hrefComponents[hrefComponents.length - 1];
-            let isPhoneNumber = lastComponent.replace(/\s/g, '').match(NUMERIC_REGEXP);
+            const hrefComponents = href.split('/');
+            const lastComponent = hrefComponents[hrefComponents.length - 1];
+            const isPhoneNumber = lastComponent.replace(/\s/g, '').match(NUMERIC_REGEXP);
             if (isPhoneNumber) {
                 let newHref = '';
                 hrefComponents.map((component, index) => {
@@ -76,9 +76,9 @@ const outBoundApiLogger = async ({ href, requestStart, statusCode, microServiceN
             }
         }
 
-        let date = momentTimezone().tz(TIMEZONE).startOf('day').format('YYYY-MM-DD');
-        let dateTime = momentTimezone().tz(TIMEZONE).format();
-        let log = {
+        const date = momentTimezone().tz(timezone).startOf('day').format('YYYY-MM-DD');
+        const dateTime = momentTimezone().tz(timezone).format();
+        const log = {
             processingTime,
             url: href,
             statusCode: statusCode,
