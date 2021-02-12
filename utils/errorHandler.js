@@ -115,8 +115,8 @@ const morphError = async ({ err, date, dateTime, status, scope }) => {
 // remove dependency from process.env
 const errorHandler = async ({ err, ship = true, self = false, timezone = 'Asia/Calcutta', scope = '@niccsj/elastic-logger', status = null, exporter = false, brand_name = process.env.BRAND_NAME, cs_env = process.env.CS_ENV, microServiceName = process.env.MS_NAME}) => {
     try {
-        if(esClientObj && esClientObj.detail) esClientObj = require('../utils/elasticHandler/initializeElasticLogger').esClientObj;
-        console.log('client details from esClientObj---->', esClientObj, esClientObj.details, microServiceName);
+        if(!esClientObj && !esClientObj.detail) esClientObj = require('../utils/elasticHandler/initializeElasticLogger').esClientObj;
+        // console.log('client details from esClientObj---->', esClientObj, esClientObj.details, microServiceName);
         if (self) return; //gaurd clause
         console.log('ship, self, timezone, scope', ship, self, timezone, scope);
         const date = momentTimezone().tz(timezone).startOf('day').format('YYYY-MM-DD');
