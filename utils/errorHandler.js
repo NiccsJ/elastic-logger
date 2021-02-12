@@ -116,7 +116,7 @@ const morphError = async ({ err, date, dateTime, status, scope }) => {
 const errorHandler = async ({ err, ship = true, self = false, timezone = 'Asia/Calcutta', scope = '@niccsj/elastic-logger', status = null, exporter = false, brand_name = process.env.BRAND_NAME, cs_env = process.env.CS_ENV, microServiceName = process.env.MS_NAME}) => {
     try {
         if(esClientObj && esClientObj.detail) esClientObj = require('../utils/elasticHandler/initializeElasticLogger').esClientObj;
-        console.log('client details from esClientObj---->', esClientObj, esClientObj.details, brand_name, cs_env, microServiceName);
+        console.log('client details from esClientObj---->', esClientObj, esClientObj.details, microServiceName);
         if (self) return; //gaurd clause
         console.log('ship, self, timezone, scope', ship, self, timezone, scope);
         const date = momentTimezone().tz(timezone).startOf('day').format('YYYY-MM-DD');
@@ -128,7 +128,7 @@ const errorHandler = async ({ err, ship = true, self = false, timezone = 'Asia/C
 
         console.error('\n' + JSON.stringify(morphedError) + '\n');
 
-        if (ship) { //should be able to ship when invoked from catch as well.
+        if (ship) {
             if (exporter) return morphedError.data;
             if (!shipDataToElasticsearh) shipDataToElasticsearh = require('./utilities').shipDataToElasticsearh;
             shipDataToElasticsearh({ log: morphedError.data, batchSize: 10, brand_name, cs_env, microServiceName, checkArgs: true });

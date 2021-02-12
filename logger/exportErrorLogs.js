@@ -2,7 +2,6 @@ let argsValid = false;
 const { checkSuppliedArguments, shipDataToElasticsearh } = require('../utils/utilities');
 const { errorHandler, elasticError } = require('../utils/errorHandler');
 
-//move this to error handler
 const exportErrorLogs = async ({ err, microServiceName, brand_name, cs_env, batchSize = 10, timezone = 'Asia/Calcutta', scope = 'global', status = null }) => {
     try {
         if (!argsValid) argsValid = await checkSuppliedArguments({ err, esConnObj: true, microServiceName, brand_name, cs_env });

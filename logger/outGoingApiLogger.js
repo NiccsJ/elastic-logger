@@ -5,6 +5,8 @@ const { checkSuppliedArguments, shipDataToElasticsearh } = require('../utils/uti
 
 const overwriteHttpProtocol = ({ microServiceName, brand_name, cs_env, batchSize = 10, TIMEZONE = "Asia/Calcutta", esConnObj }) => {
     try {
+        if (!argsValid) argsValid = await checkSuppliedArguments({ err: 'outGoingLogs', esConnObj, microServiceName, brand_name, cs_env });
+        if (!argsValid) throw new elasticError({ name: 'Initialization failed:', message: `exportErrorLogs: Argument(s) missing`, type: 'elastic-logger', status: 999 });
         let url = (esConnObj && esConnObj.url) ? esConnObj.url : process.env.elasticUrl;
         if (!url) throw new elasticError({ name: 'Initialization failed:', message: `overwriteHttpProtocol: 'elasticUrl' argument missing`, type: 'elastic-logger', status: 999 });
         const urls = url.split(',');
@@ -56,8 +58,6 @@ const overwriteHttpProtocol = ({ microServiceName, brand_name, cs_env, batchSize
 
 const outBoundApiLogger = async ({ href, requestStart, statusCode, microServiceName, brand_name, cs_env, batchSize, esConnObj }) => {
     try {
-        if (!argsValid) argsValid = await checkSuppliedArguments({ err: 'outGoingLogs', esConnObj, microServiceName, brand_name, cs_env });
-        if (!argsValid) throw new elasticError({ name: 'Initialization failed:', message: `exportErrorLogs: Argument(s) missing`, type: 'elastic-logger', status: 999 });
         let processingTime = Date.now() - requestStart;
         const NUMERIC_REGEXP = /[4-9]{1}[0-9]{9}/g;
         console.log('href in outgoing logger----->', href);

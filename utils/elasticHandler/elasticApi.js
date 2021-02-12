@@ -46,6 +46,5 @@ const bulkIndex = async (logs, index) => {
 };
 
 module.exports = {
-    // indexDocument,
     bulkIndex,
 }

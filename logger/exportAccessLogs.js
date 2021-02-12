@@ -42,7 +42,7 @@ const exportAccessLogs = ({ microServiceName, brand_name, cs_env, batchSize = 10
             });
             next();
         } catch (err) {
-            errorHandler({ err, ship: true, scope: '@niccsj/elastic-logger.exportAccessLogs' });
+            errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.exportAccessLogs' });
             next();
         }
     };
