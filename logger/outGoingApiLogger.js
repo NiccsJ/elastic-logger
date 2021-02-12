@@ -3,7 +3,7 @@ const momentTimezone = require('moment-timezone');
 const { errorHandler, elasticError } = require('../utils/errorHandler');
 const { checkSuppliedArguments, shipDataToElasticsearh } = require('../utils/utilities');
 
-const overwriteHttpProtocol = ({ microServiceName, brand_name, cs_env, batchSize = 10, timezone = "Asia/Calcutta", esConnObj }) => {
+const overwriteHttpProtocol = async ({ microServiceName, brand_name, cs_env, batchSize = 10, timezone = "Asia/Calcutta", esConnObj }) => {
     try {
         if (!argsValid) argsValid = await checkSuppliedArguments({ err: 'outGoingLogs', esConnObj, microServiceName, brand_name, cs_env });
         if (!argsValid) throw new elasticError({ name: 'Initialization failed:', message: `exportErrorLogs: Argument(s) missing`, type: 'elastic-logger', status: 999 });
