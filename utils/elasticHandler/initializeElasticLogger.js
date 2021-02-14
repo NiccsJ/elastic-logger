@@ -1,4 +1,3 @@
-let argsValid = false;
 const esClientObj = {};
 const elasticsearch = require('@elastic/elasticsearch');
 const { checkSuppliedArguments } = require('../utilities');
@@ -29,24 +28,28 @@ const connection = async (esConnObj) => {
 			}
 		}
 		const client = new elasticsearch.Client(options);
-		console.log('-----------------------INITIALIZED-----------------------');
 		return client;
 	} catch (err) {
-		errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.connection' });
-		return false;
+		throw(err);
+		// errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.connection' });
+		// return false;
 	}
 };
 
-const initializeElasticLogger = async ({ esConnObj, brand_name = 'default', cs_env = 'dev', microServiceName = 'default', batchSize = 10, timezone = 'Asia/Calcutta' }) => {
+const initializeElasticLogger = async ({ esConnObj, brand_name, cs_env, microServiceName, batchSize = 10, timezone = 'Asia/Calcutta' }) => {
 	try {
-		if (!argsValid) argsValid = await checkSuppliedArguments({ err: 'initializing', esConnObj, microServiceName, brand_name, cs_env });
-		if (!argsValid) throw new elasticError({ name: 'Initialization failed: ', message: `elastic-logger could not be initialized`, type: 'elastic-logger', status: 999 });
-		if (esClientObj && !esClientObj.client) esClientObj.client = await connection(esConnObj);
-		esClientObj.details = esConnObj;
-		esClientObj.status = true; //is it needed?
+		const initializerValid = await checkSuppliedArguments({ err: 'initializing', esConnObj, microServiceName, brand_name, cs_env, batchSize, timezone, exporterType: 'initializer' });
+		if (initializerValid) {
+			if (esClientObj && !esClientObj.client) esClientObj.client = await connection(esConnObj);
+			esClientObj.status = true;
+			esClientObj.defaultLoggerDetails = { esConnObj, brand_name, cs_env, microServiceName, batchSize, timezone };
+			console.log('-----------------------ELASTIC-LOGGER INITIALIZED-----------------------');
+			return true; //is this needed?
+		}
 	} catch (err) {
 		errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.initializeElasticLogger' });
 		esClientObj.status = false;
+		return false;
 	}
 }
 
