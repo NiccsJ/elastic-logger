@@ -1,9 +1,8 @@
-let incomingRequestBatch = [];
 const momentTimezone = require('moment-timezone');
 const { checkSuppliedArguments, shipDataToElasticsearh } = require('../utils/utilities');
 const { errorHandler, elasticError } = require('../utils/errorHandler');
 
-const exportAccessLogs = ({ microServiceName, brand_name, cs_env, batchSize = 10, timezone = 'Asia/Calcutta' }) => {
+const exportAccessLogs = ({ microServiceName, brand_name, cs_env, batchSize, timezone = 'Asia/Calcutta' }) => {
     return (req, res, next) => {
         try {
             const requestStart = Date.now();
@@ -31,7 +30,7 @@ const exportAccessLogs = ({ microServiceName, brand_name, cs_env, batchSize = 10
                         "@timestamp": dateTime
                     };
 
-                    shipDataToElasticsearh({ log, batchSize, brand_name, microServiceName, cs_env, checkArgs: true });
+                    shipDataToElasticsearh({ log, microServiceName, brand_name, cs_env, batchSize, timezone, exporterType: 'access' });
 
                 } catch (err) {
                     errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.exportAccessLogs.res.on' });
