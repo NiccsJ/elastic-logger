@@ -6,6 +6,10 @@ let batchRequest = [];
 const { bulkIndex } = require('./elasticHandler/elasticApi');
 const { errorHandler, elasticError } = require('./errorHandler');
 
+const getEc2Metadata = async () => {
+
+};
+
 const checkSuppliedArguments = async ({ err, esConnObj, microServiceName, brand_name, cs_env, batchSize, timezone, exporterType }) => {
     try {
         let argsValid = false;
@@ -48,7 +52,7 @@ const checkSuppliedArguments = async ({ err, esConnObj, microServiceName, brand_
         return argsValid;
     } catch (err) {
         throw (err);
-        }
+    }
 };
 
 const shipDataToElasticsearh = async ({ log, esConnObj, microServiceName, brand_name, cs_env, batchSize, timezone, exporterType }) => {
