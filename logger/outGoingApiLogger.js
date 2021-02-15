@@ -1,10 +1,11 @@
+let url;
 const momentTimezone = require('moment-timezone');
 const { errorHandler, elasticError } = require('../utils/errorHandler');
 const { checkSuppliedArguments, shipDataToElasticsearh } = require('../utils/utilities');
 
-const overwriteHttpProtocol = async ({ microServiceName, brand_name, cs_env, batchSize, timezone = 'Asia/Calcutta', esConnObj }) => {
+const overwriteHttpProtocol = async ({ microServiceName, brand_name, cs_env, batchSize, timezone = 'Asia/Calcutta', elasticUrl = process.env.elasticUrl }) => {
     try {
-        const url = (esConnObj && esConnObj.url) ? esConnObj.url : process.env.elasticUrl;
+        url = elasticUrl;
         if (!url) throw new elasticError({ name: 'Initialization failed:', message: `overwriteHttpProtocol: 'elasticUrl' argument missing`, type: 'elastic-logger', status: 999 });
         const urls = url.split(',');
         const httpObj = require('http');
@@ -15,13 +16,14 @@ const overwriteHttpProtocol = async ({ microServiceName, brand_name, cs_env, bat
                 object.request = (options, callback) => {
                     try {
                         const requestStart = Date.now();
-                        function newCallback () {
+                        function newCallback() {
                             try {
                                 const res = arguments[0];
                                 const ipPorts = urls.map(url => { return url.split("//")[1] });
                                 const ips = ipPorts.map(ipPort => { return ipPort.split(":")[0] });
                                 const hostname = ips;
                                 if (options && options.hostname && !hostname.includes(options.hostname)) {
+                                    // console.log('hostname, options--------->', hostname, options.hostname);
                                     let href = options.href ? options.href : options.hostname + options.path;
                                     outBoundApiLogger({ href, requestStart, statusCode: res.statusCode, microServiceName, brand_name, cs_env, batchSize, timezone });
                                 }
