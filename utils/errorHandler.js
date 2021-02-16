@@ -70,6 +70,7 @@ const morphError = async ({ err, date, dateTime, status, scope }) => {
                 status: err.status ? err.status : status ? status : null,
                 scope: scope ? scope : null,
                 type: err.type ? err.type : null,
+                microSerivce: microServiceName ? microServiceName : 'default',
                 logType: 'errorLogs',
                 logDate: date,
                 "@timestamp": dateTime,
@@ -86,6 +87,7 @@ const morphError = async ({ err, date, dateTime, status, scope }) => {
                 statusText: err.response.statusText ? err.response.statusText : null,
                 allowedMethod: err.response.headers ? err.response.headers.allow : null,
                 scope: scope ? scope : null,
+                microSerivce: microServiceName ? microServiceName : 'default',
                 logType: 'errorLogs',
                 logDate: date,
                 "@timestamp": dateTime,
@@ -99,6 +101,7 @@ const morphError = async ({ err, date, dateTime, status, scope }) => {
                 status: status ? status : 0,
                 scope: scope ? scope : null,
                 type: err.type ? err.type : null,
+                microSerivce: microServiceName ? microServiceName : 'default',
                 logType: 'errorLogs',
                 logDate: date,
                 "@timestamp": dateTime,
@@ -120,7 +123,7 @@ const errorHandler = async ({ err, ship = true, log = true, self = false, timezo
 
         const morphedError = {};
         morphedError.main = '<-----@niccsj/elastic-logger: errorHandler----->';
-        morphedError.data = await morphError({ err, date, dateTime, status, scope });
+        morphedError.data = await morphError({ err, microServiceName, date, dateTime, status, scope });
 
         if (log) console.error('\n' + JSON.stringify(morphedError) + '\n');
 

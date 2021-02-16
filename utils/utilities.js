@@ -74,7 +74,7 @@ const shipDataToElasticsearh = async ({ log, esConnObj, microServiceName, brand_
                 throw new elasticError({ name: 'Argument(s) validation error:', message: `Invalid exporterType specified: '${exporterType}'. Allowed values are: 'initializer', 'access', and 'api'.`, type: 'elastic-logger', status: 998 });
         }
         batchSize = batchSize ? batchSize : defaultLoggerDetails.batchSize;
-        const index = brand_name + '_' + microServiceName + '_' + cs_env;
+        const index = cs_env + '_' + brand_name;
         batchRequest.push(log);
         if ((batchRequest.length >= batchSize)) {
             bulkIndex(batchRequest, index);
