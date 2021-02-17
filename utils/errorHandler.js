@@ -72,6 +72,7 @@ const morphError = async ({ err, date, dateTime, status, scope }) => {
                 status: err.status ? err.status : status ? status : null,
                 scope: err.scope ? err.scope : scope ? scope : null,
                 type: err.type ? err.type : null,
+                meta: err.meta ? err.meta : null,
                 microSerivce: microServiceName ? microServiceName : 'default',
                 logType: 'errorLogs',
                 logDate: date,

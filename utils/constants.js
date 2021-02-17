@@ -32,8 +32,8 @@ const defaultInitializationValues = {
 const defaultIndexTemplateValues = {
     create: false,
     name: 'default_elastic_logger_template',
-    index_patterns: 'default_elastic_logger_*',
-    number_of_shards: 2,
+    index_patterns: 'default_elastic_logger-*',
+    number_of_shards: 3,
     number_of_replicas: 0,
     "index.lifecycle.name": 'default_elastic_logger_policy',
     "index.lifecycle.rollover_alias": 'default_elastic_logger'
@@ -45,7 +45,8 @@ const defaultIlmPolicyValues = {
     hotDuration: '2d', 
     warmAfter: '1h', 
     deleteAfter: '15d',
-    shrinkShards: defaultIndexTemplateValues.number_of_shards
+    shrinkShards: defaultIndexTemplateValues.number_of_shards,
+    overwriteILM: false
 };
 
 module.exports = {
