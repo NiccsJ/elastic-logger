@@ -2,6 +2,8 @@ const esClientObj = {};
 const elasticsearch = require('@elastic/elasticsearch');
 const { checkSuppliedArguments } = require('../utilities');
 const { errorHandler, elasticError } = require('../errorHandler');
+const { setUpILM, putIndexTemplate } = require('../elasticHandler/elasticApi');
+const { defaultIlmPolicyValues, defaultIndexTemplateValues, defaultInitializationValues } = require('../constants');
 
 const connection = async (esConnObj) => {
 	try {
@@ -25,14 +27,41 @@ const connection = async (esConnObj) => {
 	}
 };
 
-const initializeElasticLogger = async ({ esConnObj, brand_name, cs_env, microServiceName, batchSize = 10, timezone = 'Asia/Calcutta' }) => {
+const initializeElasticLogger = async ({ esConnObj, brand_name, cs_env, microServiceName, batchSize, timezone, ilmObject, indexSettings }) => {
 	try {
+		const { sizeMB, hotDuration, warmAfter, deleteAfter } = ilmObject;
+		const { primaryShards, replicaShards, overwrite } = indexSettings;
+
+		//set up values/defaults for initialization from constants
+		esConnObj = esConnObj ? esConnObj : defaultInitializationValues.esConnObj;
+		brand_name = brand_name ? brand_name : defaultInitializationValues.brand_name;
+		cs_env = cs_env ? cs_env : defaultInitializationValues.cs_env;
+		microServiceName = microServiceName ? microServiceName : defaultInitializationValues.microServiceName;
+		batchSize = batchSize ? batchSize : defaultInitializationValues.batchSize;
+		timezone = timezone ? timezone : defaultInitializationValues.timezone;
+
+		//setup values/defaults from index template
+		primaryShards = primaryShards ? primaryShards : defaultIndexTemplateValues.number_of_shards;
+		replicaShards = replicaShards ? replicaShards : defaultIndexTemplateValues.number_of_replicas;
+		overwrite = overwrite ? overwrite : defaultIndexTemplateValues.overwrite;
+
+		//set up values/defaults for ILM from constants
+		policyName = (cs_env && brand_name) ? `${cs_env}_${brand_name}_policy` : defaultIlmPolicyValues.policyName;
+		size = size ? size : defaultIlmPolicyValues.size;
+		hotDuration = hotDuration ? hotDuration : defaultIlmPolicyValues.hotDuration;
+		warmAfter = warmAfter ? warmAfter : defaultIlmPolicyValues.warmAfter;
+		deleteAfter = deleteAfter ? deleteAfter : defaultIlmPolicyValues.deleteAfter;
+		shrinkShards = shrinkShards ? shrinkShards : (primaryShards === 1) ? primaryShards : (primaryShards - 1);
+
+
 		const initializerValid = await checkSuppliedArguments({ err: 'initializing', esConnObj, microServiceName, brand_name, cs_env, batchSize, timezone, exporterType: 'initializer' });
 		if (initializerValid) {
 			if (esClientObj && !esClientObj.client) esClientObj.client = await connection(esConnObj);
 			esClientObj.status = true;
 			esClientObj.defaultLoggerDetails = { esConnObj, brand_name, cs_env, microServiceName, batchSize, timezone };
 			console.log('-----------------------ELASTIC-LOGGER INITIALIZED-----------------------');
+			setUpILM({ policyName, sizeMB, hotDuration, warmAfter, deleteAfter, shrinkShards });
+			putIndexTemplate({ brand_name, cs_env, primaryShards, replicaShards, overwrite });
 			return true;
 		}
 	} catch (err) {

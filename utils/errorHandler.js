@@ -12,11 +12,13 @@ class elasticError extends Error {
 };
 
 class esError extends elasticError {
-    constructor({ name, message, description, type = 'elasticsearch', status }) {
+    constructor({ name, message, description, type = 'custom', status, scope = 'global'}) {
         super({ name, message, type, status });
         this.description = description;
+        this.scope = scope;
     };
 }
+
 
 const handleAxiosErrors = async ({ err, date, dateTime, ship = false, scope }) => {
     try {
@@ -68,7 +70,7 @@ const morphError = async ({ err, date, dateTime, status, scope }) => {
                 message: err.message ? err.message : err.stack.split("\n")[0],
                 description: err.description ? err.description : err.stack ? err.stack : 'none',
                 status: err.status ? err.status : status ? status : null,
-                scope: scope ? scope : null,
+                scope: err.scope ? err.scope : scope ? scope : null,
                 type: err.type ? err.type : null,
                 microSerivce: microServiceName ? microServiceName : 'default',
                 logType: 'errorLogs',

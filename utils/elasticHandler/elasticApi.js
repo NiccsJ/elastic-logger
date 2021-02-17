@@ -1,60 +1,24 @@
 let client;
+const { defaultInitializationValues, defaultIndexTemplateValues, defaultIlmPolicyValues } = require('../constants');
 const { errorHandler, elasticError, esError } = require('../errorHandler');
 
-// PUT _ilm/policy/filebeat
-// {
-//   "policy": {
-//     "phases": {
-//       "hot": {
-//         "min_age": "0ms",
-//         "actions": {
-//           "rollover": {
-//             "max_size": "2gb",
-//             "max_age": "2d"
-//           }
-//         }
-//       },
-// "warm": {
-//     "min_age": "1h",
-//     "actions": {
-//       "forcemerge": {
-//         "max_num_segments": 1
-//       },
-//       "migrate": {
-//         "enabled": false
-//       },
-//       "shrink": {
-//         "number_of_shards": 1
-//       }
-//     },
-//       "delete": {
-//         "min_age": "5d",
-//         "actions": {
-//           "delete": {
-//             "delete_searchable_snapshot": true
-//           }
-//         }
-//       }
-//     }
-//   }
-// }
 
-const setUpILM = async ({ policyName, sizeMB, hotDuration, warmAfter, deleteAfter }) => {
+const setUpILM = async ({ policyName, size, hotDuration, warmAfter, deleteAfter, shrinkShards }) => {
     try {
         if (!client) client = require('./initializeElasticLogger').esClientObj.client;
-        
+
         const options = {};
         const hotPhase = {
             min_age: "0ms",
             actions: {
                 rollover: {
-                    max_size: sizeMB ? sizeMB : '2gb',
-                    max_age: hotDuration ? hotDuration : '2d'
+                    max_size: size,
+                    max_age: hotDuration
                 }
             }
         };
         const warmPhase = {
-            min_age: warmAfter ? warmAfter : '1h',
+            min_age: warmAfter,
             actions: {
                 forcemerge: {
                     max_num_segments: 1
@@ -63,12 +27,12 @@ const setUpILM = async ({ policyName, sizeMB, hotDuration, warmAfter, deleteAfte
                     enabled: false
                 },
                 shrink: {
-                    number_of_shards: (primaryShards === 1) ? 1 : (primaryShards - 1)
+                    number_of_shards: shrinkShards
                 }
             }
         };
         const deletePhase = {
-            min_age: deleteAfter ? deleteAfter : "15d",
+            min_age: deleteAfter,
             actions: {
                 delete: {
                     delete_searchable_snapshot: true
@@ -92,8 +56,8 @@ const setUpILM = async ({ policyName, sizeMB, hotDuration, warmAfter, deleteAfte
 const putIndexTemplate = async ({ brand_name, cs_env, primaryShards, replicaShards, overwrite }) => {
     try {
         if (!client) client = require('./initializeElasticLogger').esClientObj.client;
-        
-        const prefix = (cs_env && brand_name) ? `${cs_env}_${brand_name}` : 'defaultElasticLogger';
+
+        const prefix = (cs_env && brand_name) ? `${cs_env}_${brand_name}` : 'default_elastic_logger';
         const ilmPolicyName = `${prefix}_policy`;
         const options = {};
         options.name = `${prefix}_template`;
@@ -122,7 +86,13 @@ const bulkIndex = async (logs, index) => {
         if (!client) client = require('./initializeElasticLogger').esClientObj.client;
 
         const body = logs.flatMap(log => [{ index: {} }, log]);
-        const { body: bulkResponse } = await client.bulk({ index: index, require_alias: true, refresh: true, body });
+        const options = {};
+        options.index = index;
+        options.require_alias = true;
+        options.refresh = true;
+        options.body = body;
+
+        const { body: bulkResponse } = await client.bulk(options);
         if (bulkResponse.errors) {
             const errorObj = bulkResponse.errors.items;
             throw new elasticError({ name: 'ElasticAPI error:', message: `${JSON.stringify(bulkResponse.items)}`, type: 'elastic-logger', status: 888 });
@@ -136,4 +106,6 @@ const bulkIndex = async (logs, index) => {
 
 module.exports = {
     bulkIndex,
+    putIndexTemplate,
+    setUpILM
 }

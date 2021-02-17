@@ -2,7 +2,7 @@ const { initializeElasticLogger } = require('./utils/elasticHandler/initializeEl
 const { exportAccessLogs} = require('./logger/exportAccessLogs');
 const { exportErrorLogs } = require('./logger/exportErrorLogs');
 const { overwriteHttpProtocol } = require('./logger/outGoingApiLogger');
-const { errorHandler, elasticError } = require('./utils/errorHandler');
+const { errorHandler, elasticError, esError} = require('./utils/errorHandler');
 
 module.exports = {
     initializeElasticLogger,
@@ -11,4 +11,5 @@ module.exports = {
     overwriteHttpProtocol,
     errorHandler,
     elasticError,
+    esError
 }
