@@ -78,6 +78,7 @@ const outBoundApiLogger = async ({ href, requestStart, statusCode, microServiceN
             url: href,
             processingTime,
             statusCode,
+            microSerivce: microServiceName ? microSerivceName : 'default',
             logType: 'apiLogs',
             logDate: date,
             "@timestamp": dateTime,

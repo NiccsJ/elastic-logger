@@ -11,10 +11,10 @@ class elasticError extends Error {
     };
 };
 
-class esError extends elasticError {
-    constructor({ name, message, description, type = 'elasticsearch', status }) {
+class dynamicError extends elasticError {
+    constructor({ name, message, metadata, type = 'elasticsearch', status }) {
         super({ name, message, type, status });
-        this.description = description;
+        this.metadata = metadata;
     };
 }
 
@@ -58,58 +58,48 @@ const handleAxiosErrors = async ({ err, date, dateTime, ship = false, scope }) =
     }
 };
 
-const morphError = async ({ err, date, dateTime, status, scope }) => {
+const morphError = async ({ err, microServiceName, date, dateTime, status, scope = null }) => {
     try {
         let errObj = {};
-        //nodesjs
         if (err && err.stack) {
-            errObj = {
-                name: err.name ? err.name : null,
-                message: err.message ? err.message : err.stack.split("\n")[0],
-                description: err.description ? err.description : err.stack ? err.stack : 'none',
-                status: err.status ? err.status : status ? status : null,
-                scope: scope ? scope : null,
-                type: err.type ? err.type : null,
-                logType: 'errorLogs',
-                logDate: date,
-                "@timestamp": dateTime,
-                parsed: true
-            };
+            errObj['name'] = err.name ? err.name : null;
+            errObj['message'] = err.message ? err.message : err.stack.split("\n")[0];
+            errObj['description'] = err.description ? err.description : err.stack ? err.stack : 'none';
+            errObj['meta'] = err.meta ? err.meta : null;
+            errObj['status'] = err.status ? err.status : status ? status : null;
+            errObj['scope'] = err.scope ? err.scope : null;
         } else if (err.response && err.response.data) {
-            errObj = {
-                name: err.name ? err.name : null,
-                type: (err.response.data.error && err.response.data.error.type) ? err.response.data.error.type : err.response.data.error ? err.response.data.error : err.type ? err.type : null,
-                reason: (err.response.data.error && err.response.data.error.reason) ? err.response.data.error.reason : null,
-                url: (err.response.config && err.response.config.url) ? err.response.config.url : null,
-                errorHeader: (err.response.data.error && err.response.data.error.header) ? err.response.data.error.header : null,
-                status: err.response.status ? err.response.status : err.response.data.status ? err.response.data.status : null,
-                statusText: err.response.statusText ? err.response.statusText : null,
-                allowedMethod: err.response.headers ? err.response.headers.allow : null,
-                scope: scope ? scope : null,
-                logType: 'errorLogs',
-                logDate: date,
-                "@timestamp": dateTime,
-                parsed: true
-            };
+            errObj['name'] = err.name ? err.name : null;
+            errObj['type'] = (err.response.data.error && err.response.data.error.type) ? err.response.data.error.type : err.response.data.error ? err.response.data.error : null;
+            errObj['reason'] = (err.response.data.error && err.response.data.error.reason) ? err.response.data.error.reason : null;
+            errObj['url'] = (err.response.config && err.response.config.url) ? err.response.config.url : null;
+            errObj['errorHeader'] = (err.response.data.error && err.response.data.error.header) ? err.response.data.error.header : null;
+            errObj['status'] = err.response.status ? err.response.status : err.response.data.status ? err.response.data.status : null;
+            errObj['statusText'] = err.response.statusText ? err.response.statusText : null;
+            errObj['allowedMethod'] = err.response.headers ? err.response.headers.allow : null;
         } else {
-            errObj = {
-                name: err.name ? err.name : null,
-                message: err,
-                description: 'Unable to parse error',
-                status: status ? status : 0,
-                scope: scope ? scope : null,
-                type: err.type ? err.type : null,
-                logType: 'errorLogs',
-                logDate: date,
-                "@timestamp": dateTime,
-                parsed: false
-            };
+            errObj['name'] = err.name ? err.name : null;
+            errObj['message'] = err;
+            errObj['description'] = 'Unable to parse error';
+            errObj['status'] = status ? status : 0;
+            errObj['parsed'] = false;
         }
+
+        //common keys
+        errObj['metadata'] = err.metadata ? err.metadata : null;
+        errObj['scope'] = errObj['scope'] ? errObj['scope'] : scope;
+        errObj['type'] = errObj['type'] ? errObj['type'] : err.type ? err.type : null;
+        errObj['microSerivce'] = microServiceName ? microServiceName : 'default';
+        errObj['logType'] = 'errorLogs';
+        errObj['logDate'] = date;
+        errObj["@timestamp"] = dateTime;
+        errObj['parsed'] = errObj['parsed'] === false ? false : true;
+
         return errObj;
+
     } catch (err) {
         throw (err);
     }
-
 };
 
 const errorHandler = async ({ err, ship = true, log = true, self = false, timezone = 'Asia/Calcutta', scope = '@niccsj/elastic-logger', status = null, exporter = false, batchSize, brand_name, cs_env, microServiceName }) => {
@@ -120,10 +110,9 @@ const errorHandler = async ({ err, ship = true, log = true, self = false, timezo
 
         const morphedError = {};
         morphedError.main = '<-----@niccsj/elastic-logger: errorHandler----->';
-        morphedError.data = await morphError({ err, date, dateTime, status, scope });
-
+        morphedError.data = await morphError({ err, microServiceName, date, dateTime, status, scope });
         if (log) console.error('\n' + JSON.stringify(morphedError) + '\n');
-
+        if (self) return; //return after one error from slef
         if (ship) {
             if (exporter) return morphedError.data;
             if (!shipDataToElasticsearh) shipDataToElasticsearh = require('./utilities').shipDataToElasticsearh;
@@ -138,5 +127,5 @@ const errorHandler = async ({ err, ship = true, log = true, self = false, timezo
 module.exports = {
     errorHandler,
     elasticError,
-    esError
+    dynamicError
 };
