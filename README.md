@@ -260,18 +260,20 @@ To collect error exceptions caught with try/catch, you can either your your own 
 #### Error Class ####
 The only difference between `elasticError` and `dynamicError` is the additional filed metadata in the latter.
 
-  ```javascript
-    const anyFunction = async () => {
-      try {
-        //some condition
+```javascript
 
-        //use of metadata same as explained above
-        //use case if you specifically want to throw an error based on a condition with specific values for identification.
+const anyFunction = async () => {
+  try {
+    //some condition
 
-        throw new dynamicError({ name: `${someName}`, message: `some message ${variable}`, metadata, status: `${status}`, type: 'optional' });
+    //use of metadata same as explained above
+    //use case if you specifically want to throw an error based on a condition with specific values for identification.
 
-      } catch (err) {
-        //handle error
-      }
-    };
-    ```
+    throw new dynamicError({ name: `${someName}`, message: `some message ${variable}`, metadata, status: `${status}`, type: 'optional' });
+
+  } catch (err) {
+    //handle error
+  }
+};
+```
+
