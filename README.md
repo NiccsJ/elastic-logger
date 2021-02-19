@@ -10,12 +10,12 @@ $ npm install @niccsj/elastic-logger --save
 <br>
 
 ## Features: ##
- * Parses standard node.js error logs into clear JSON format and ships the logs from to an Elastic Search cluster.
+ * Parses standard node.js error logs into clear JSON format and ships the logs from to an Elastic Search cluster.  
    Enables ***easy visulatisaion and aggregation*** in ***Kibana*** without the need of ***Logstash*** or any other log formatting tool.
  * Includes a middleware which captures and ships all the incomming api logs along with necessary details.
  * Also, has the gives you an option to export outgoing api calls for tracking and logging.
  * Provies two custom Error classes and an errorHandler.
- * Automated index creation .via tempaltes. ILM enabled by default for rollover. Configures a default ILM policy. <!-- details can be seen in constants.js -->
+ * Automated index creation .via tempaltes. ILM enabled by default for rollover. A default policy is configured acc to values specied in constants.js. 
  * Fields available as of now:
    * ErrorLogger: 
       * name
@@ -50,15 +50,15 @@ $ npm install @niccsj/elastic-logger --save
 <br>
 
 ## Pre-Requisits ##
-* An elasticsearch cluster. <!-- single node clusters are also allowed -->
+* An elasticsearch cluster.
 * Minimum 1 master node. Can provide multiple hosts for fault-tolerance.
-* Kibana <!-- if you need to visualize -->
+* Kibana for visulization and visability.
 
 <br>
 
 ## Usage ##
 #### Access/API Logs ####
-Import the package at the very start of you application. <!-- typically, app.js -->
+Import the package at the very start of you application. Generally it's, app.js
 
 <br>
 
@@ -177,3 +177,61 @@ process.on('uncaughtException', (err, origin) => {
   }
 });
 ```
+
+To collect error exceptions caught with try/catch, you can either your your own errorHandling function or use the one included in this package.
+
+* Own Function:
+    ```javascript
+    const handleAppError = async ({ err }) => {
+      try {
+        if (process.env.elasticUrl) {
+          const elasticLoggerObject = {
+            err,
+            microServiceName: 'ocs',
+            brand_name: process.env.BRAND_NAME,
+            cs_env: process.env.CS_ENV,
+            batchSize: 0,
+            timezone: 'Asia/Calcutta',
+            scope: 'handleAppError'
+          };
+          exportErrorLogs(elasticLoggerObject);
+        }
+        
+      } catch (err) {
+        //
+      }
+    };
+
+    const anyFunction = async (params) => {
+      try {
+        //opration
+      } catch (err) {
+         handleAppError({ err });
+      }
+    };
+
+    ```
+* IncludedFunction
+    ```javascript
+    const { errorHandler, elasticError, dynamicError } = require('../errorHandler');
+
+    const anyFunction = async (params) => {
+      try {
+        //opration
+      } catch (err) {
+         errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.initializeElasticLogger' });
+      }
+    };
+    ```
+    * Arguments explanation for errorHandler:
+      * err = err | Object `  The error object ` ` Required `
+      * ship = false/true | Bool ` Boolean to specify whether or not to ship this exception to elasticsearch. Can be useful if you need to silent some errors. ` ` Optional | Defaults to true `
+      * log = false/true | Bool ` Boolean to specify whether or not to log the error to the console .via console.error() ` ` Optional | Defaults to true `
+      * timezone = 'Asia/Calcutta' | String ` The timezone to be used. ` ` Optional | Defaults to 'Asia/Calcutta' `
+      * scope = '' | String ` A string value that can define a score of the error. Can be anything, for example the name of the function where the error originated. Can be used to track errors by function.` ` Optional | Defaults to '@niccsj/elastic-logger' `
+      * status = 00 | Number ` A custom error code for your errors, can be used to track similary api errors ` ` Optional | Defaults to null `
+      * batchSize = 10 | Number ` Optional | Defaults to the values set during initialization `
+      * brand_name = 'brand' | String ` Optional | Defaults to the values set during initialization `
+      * cs_env = 'prod' | String ` Optional | Defaults to the values set during initialization `
+      * microServiceName = 'authService' | String ` Optional | Defaults to the values set during initialization `
+      
