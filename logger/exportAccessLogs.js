@@ -25,6 +25,7 @@ const exportAccessLogs = ({ microServiceName, brand_name, cs_env, batchSize, tim
                         statusCode,
                         statusMessage,
                         processingTime,
+                        microSerivce: microServiceName ? microSerivceName : 'default',
                         logType: 'accessLogs',
                         logDate: date,
                         "@timestamp": dateTime
