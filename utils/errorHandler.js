@@ -60,7 +60,7 @@ const handleAxiosErrors = async ({ err, date, dateTime, ship = false, scope }) =
     }
 };
 
-const morphError = async ({ err, date, dateTime, status, scope }) => {
+const morphError = async ({ err, microServiceName, date, dateTime, status, scope }) => {
     try {
         let errObj = {};
         //nodesjs
