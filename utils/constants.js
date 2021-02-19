@@ -34,7 +34,7 @@ const defaultIndexTemplateValues = {
     name: 'default_elastic_logger_template',
     index_patterns: 'default_elastic_logger-*',
     number_of_shards: 3,
-    number_of_replicas: 0,
+    number_of_replicas: 1,
     "index.lifecycle.name": 'default_elastic_logger_policy',
     "index.lifecycle.rollover_alias": 'default_elastic_logger'
 };
