@@ -58,17 +58,17 @@ $ npm install @niccsj/elastic-logger --save
 
 ## Funtions and Classes ##
 * initializeElasticLogger({ esConnObj, brand_name, cs_env, microServiceName, batchSize, timezone, ilmObject = {}, indexSettings = {} })
-  Used to initialize elasticsearch client and setup default values.  
+  _Used to initialize elasticsearch client and setup default values._  <br>  
 * exportAccessLogs({ microServiceName, brand_name, cs_env, batchSize, timezone = 'Asia/Calcutta' })
-  Used to enable access logs shipping.  
-* exportErrorLogs({ err, ship = true, log = true, self = false, timezone = 'Asia/Calcutta', scope = '@niccsj/elastic-logger', status = null, exporter = false, batchSize, brand_name, cs_env, microServiceName }) 
-  Used to enable error logs shipping.  
+  _Used to enable access logs shipping._  <br>
+* exportErrorLogs({ err, ship = true, log = true, self = false, timezone = 'Asia/Calcutta', scope = '@niccsj/elastic-logger', status = null, exporter = false, batchSize, brand_name, cs_env, microServiceName })
+  _Used to enable error logs shipping._  <br>
 * errorHandler({ err, microServiceName, brand_name, cs_env, batchSize, timezone = 'Asia/Calcutta', scope = 'global', status = null })
-  A common error handler function.  
+  _A common error handler function._ <br>
 * elasticError({ name, message, type = 'nodejs', status })
-  An extended Error class used within the package, can be used in code for custom errors.  
+  _An extended Error class used within the package, can be used in code for custom errors._ <br>
 * dynamicError({ name, message, metadata, type = 'nodejs', status })
-  An even extended elasticError, can be used in code to add custom error fields to the error object.  
+  _An even extended elasticError, can be used in code to add custom error fields to the error object._  <br>
 
 ## Usage ##
 #### Access/API Logs ####
@@ -152,7 +152,7 @@ if (process.env.exportAccessLogs) {
 /* 
   www
 */
-const { exportErrorLogs } = require('@niccsj/elastic-logger');
+const { exportErrorLogs, errorHandler } = require('@niccsj/elastic-logger');
 ```  
 
 To enable error logs capturing, we'll listed on error events and invoke our functions as follows:
@@ -183,7 +183,7 @@ process.on('uncaughtException', (err, origin) => {
   const errReason = reason.stack || reason;
   const err = `Reason--${errReason}`;
   if (process.env.elasticUrl) {
-    const elasticLoggerObject = { 
+    const elasticLoggerObject = { //except err, all values are needed only if you plan to overwrite the values set during initilization.
       err, //Required.
       scope: 'uncaughtException' //This can be any value as per your need. //can be omitted
     };
@@ -199,7 +199,7 @@ To collect error exceptions caught with try/catch, you can either your your own 
     const handleAppError = async ({ err }) => {
       try {
         if (process.env.elasticUrl) {
-          const elasticLoggerObject = {
+          const elasticLoggerObject = { //except err, all values are needed only if you plan to overwrite the values set during initilization.
             err,
             microServiceName: 'ocs',
             brand_name: process.env.BRAND_NAME,
@@ -227,8 +227,6 @@ To collect error exceptions caught with try/catch, you can either your your own 
     ```
 * IncludedFunction
     ```javascript
-    const { errorHandler, elasticError, dynamicError } = require('../errorHandler');
-
     const anyFunction = async (params) => {
       try {
         //opration
@@ -261,7 +259,7 @@ To collect error exceptions caught with try/catch, you can either your your own 
 The only difference between `elasticError` and `dynamicError` is the additional filed metadata in the latter.
 
 ```javascript
-
+const { dynamicError, elasticError } = require('@niccsj/elastic-logger');
 const anyFunction = async () => {
   try {
     //some condition
