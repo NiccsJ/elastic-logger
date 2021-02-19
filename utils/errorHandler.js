@@ -12,7 +12,7 @@ class elasticError extends Error {
 };
 
 class dynamicError extends elasticError {
-    constructor({ name, message, metadata, type = 'elasticsearch', status }) {
+    constructor({ name, message, metadata, type = 'nodejs', status }) {
         super({ name, message, type, status });
         this.metadata = metadata;
     };
@@ -58,7 +58,7 @@ const handleAxiosErrors = async ({ err, date, dateTime, ship = false, scope }) =
     }
 };
 
-const morphError = async ({ err, microServiceName, date, dateTime, status, scope = null }) => {
+const morphError = async ({ err, microServiceName, date, dateTime, status, scope = null, metadata }) => {
     try {
         let errObj = {};
         if (err && err.stack) {
@@ -86,7 +86,7 @@ const morphError = async ({ err, microServiceName, date, dateTime, status, scope
         }
 
         //common keys
-        errObj['metadata'] = err.metadata ? err.metadata : null;
+        errObj['metadata'] = err.metadata ? err.metadata : metadata ? metadata : null;
         errObj['scope'] = errObj['scope'] ? errObj['scope'] : scope;
         errObj['type'] = errObj['type'] ? errObj['type'] : err.type ? err.type : null;
         errObj['microService'] = microServiceName ? microServiceName : 'default';
@@ -102,7 +102,7 @@ const morphError = async ({ err, microServiceName, date, dateTime, status, scope
     }
 };
 
-const errorHandler = async ({ err, ship = true, log = true, self = false, timezone = 'Asia/Calcutta', scope = '@niccsj/elastic-logger', status = null, exporter = false, batchSize, brand_name, cs_env, microServiceName }) => {
+const errorHandler = async ({ err, ship = true, log = true, self = false, timezone = 'Asia/Calcutta', scope = '@niccsj/elastic-logger', status = null, exporter = false, batchSize, brand_name, cs_env, microServiceName, metadata }) => {
     try {
         console.log('ship, self, timezone, scope', ship, self, timezone, scope);
         const date = momentTimezone().tz(timezone).startOf('day').format('YYYY-MM-DD');
@@ -110,7 +110,7 @@ const errorHandler = async ({ err, ship = true, log = true, self = false, timezo
 
         const morphedError = {};
         morphedError.main = '<-----@niccsj/elastic-logger: errorHandler----->';
-        morphedError.data = await morphError({ err, microServiceName, date, dateTime, status, scope });
+        morphedError.data = await morphError({ err, microServiceName, date, dateTime, status, scope, metadata });
         if (log) console.error('\n' + JSON.stringify(morphedError) + '\n');
         if (self) return; //return after one error from slef
         if (ship) {

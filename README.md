@@ -56,6 +56,20 @@ $ npm install @niccsj/elastic-logger --save
 
 <br>
 
+## Funtions and Classes ##
+* initializeElasticLogger({ esConnObj, brand_name, cs_env, microServiceName, batchSize, timezone, ilmObject = {}, indexSettings = {} })
+  Used to initialize elasticsearch client and setup default values.  
+* exportAccessLogs({ microServiceName, brand_name, cs_env, batchSize, timezone = 'Asia/Calcutta' })
+  Used to enable access logs shipping.  
+* exportErrorLogs({ err, ship = true, log = true, self = false, timezone = 'Asia/Calcutta', scope = '@niccsj/elastic-logger', status = null, exporter = false, batchSize, brand_name, cs_env, microServiceName }) 
+  Used to enable error logs shipping.  
+* errorHandler({ err, microServiceName, brand_name, cs_env, batchSize, timezone = 'Asia/Calcutta', scope = 'global', status = null })
+  A common error handler function.  
+* elasticError({ name, message, type = 'nodejs', status })
+  An extended Error class used within the package, can be used in code for custom errors.  
+* dynamicError({ name, message, metadata, type = 'nodejs', status })
+  An even extended elasticError, can be used in code to add custom error fields to the error object.  
+
 ## Usage ##
 #### Access/API Logs ####
 Import the package at the very start of you application. Generally it's, app.js
@@ -218,8 +232,15 @@ To collect error exceptions caught with try/catch, you can either your your own 
     const anyFunction = async (params) => {
       try {
         //opration
+        //add the fields to metadata which you need to track
+        const metadata = {}; //object
+        metadata.sessionId = ''; //string
+        metadata.psid = ''; //string
+        metadata.platform = ''; //string
+        const status = 872 //number
+
       } catch (err) {
-         errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.initializeElasticLogger' });
+         errorHandler({ err, ship: false, metadata: metadata, scope: '@niccsj/elastic-logger.initializeElasticLogger' });
       }
     };
     ```
@@ -228,10 +249,29 @@ To collect error exceptions caught with try/catch, you can either your your own 
       * ship = false/true | Bool ` Boolean to specify whether or not to ship this exception to elasticsearch. Can be useful if you need to silent some errors. ` ` Optional | Defaults to true `
       * log = false/true | Bool ` Boolean to specify whether or not to log the error to the console .via console.error() ` ` Optional | Defaults to true `
       * timezone = 'Asia/Calcutta' | String ` The timezone to be used. ` ` Optional | Defaults to 'Asia/Calcutta' `
-      * scope = '' | String ` A string value that can define a score of the error. Can be anything, for example the name of the function where the error originated. Can be used to track errors by function.` ` Optional | Defaults to '@niccsj/elastic-logger' `
+      * metadata = { anyObject } | Object ` Addition variables/fields can to added to make pin point the origin of error `
+      * scope = 'anyFunction' | String ` A string value that can define a score of the error. Can be anything, for example the name of the function where the error originated. Can be used to track errors by function.` ` Optional | Defaults to '@niccsj/elastic-logger' `
       * status = 00 | Number ` A custom error code for your errors, can be used to track similary api errors ` ` Optional | Defaults to null `
       * batchSize = 10 | Number ` Optional | Defaults to the values set during initialization `
       * brand_name = 'brand' | String ` Optional | Defaults to the values set during initialization `
       * cs_env = 'prod' | String ` Optional | Defaults to the values set during initialization `
       * microServiceName = 'authService' | String ` Optional | Defaults to the values set during initialization `
       
+#### Error Class ####
+The only difference between `elasticError` and `dynamicError` is the additional filed metadata in the latter.
+
+  ```javascript
+    const anyFunction = async () => {
+      try {
+        //some condition
+
+        //use of metadata same as explained above
+        //use case if you specifically want to throw an error based on a condition with specific values for identification.
+
+        throw new dynamicError({ name: `${someName}`, message: `some message ${variable}`, metadata, status: `${status}`, type: 'optional' });
+
+      } catch (err) {
+        //handle error
+      }
+    };
+    ```
