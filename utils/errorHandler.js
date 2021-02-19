@@ -12,7 +12,7 @@ class elasticError extends Error {
 };
 
 class dynamicError extends elasticError {
-    constructor({ name, message, metadata, type = 'nodejs', status }) {
+    constructor({ name, message, metadata, type = 'elasticsearch', status }) {
         super({ name, message, type, status });
         this.metadata = metadata;
     };
