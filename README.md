@@ -7,32 +7,60 @@
 ```shell
 $ npm install @niccsj/elastic-logger --save
 ```
+<br>
 
-* Features:
-   * Parses standard node.js error logs into clear JSON format and ships the logs from to an Elastic Search cluster.
-     Enables ***easy visulatisaion and aggregation*** in ***Kibana*** without the need of ***Logstash*** or any other log formatting tool.
-   * Includes a middleware which captures and ships all the incomming api logs along with necessary details.
-   * Also, has the gives you an option to export outgoing api calls for tracking and logging.
-   * Provies two custom Error classes and an errorHandler.
-   * Automated index creation .via tempaltes. ILM enabled by default for rollover. Configures a default ILM policy. <!-- details can be seen in constants.js -->
+## Features: ##
+ * Parses standard node.js error logs into clear JSON format and ships the logs from to an Elastic Search cluster.
+   Enables ***easy visulatisaion and aggregation*** in ***Kibana*** without the need of ***Logstash*** or any other log formatting tool.
+ * Includes a middleware which captures and ships all the incomming api logs along with necessary details.
+ * Also, has the gives you an option to export outgoing api calls for tracking and logging.
+ * Provies two custom Error classes and an errorHandler.
+ * Automated index creation .via tempaltes. ILM enabled by default for rollover. Configures a default ILM policy. <!-- details can be seen in constants.js -->
+ * Fields available as of now:
+   * ErrorLogger: 
+      * name
+      * message
+      * description
+      * meta
+      * status
+      * scope
+      * type
+      * metadata
+      * parsed
+   * AccessLogger:
+      * url
+      * method
+      * headers
+      * remoteAddress
+      * remoteFamily
+      * statusCode
+      * statusMessage
+      * processingTime
+   * ApiLogger
+      * url
+      * processingTime
+      * statusCode
+   * CommonFields:
+      * microService
+      * logType 
+      * logDate
+      * logDateTime
+      * @timestamp   
 
-* Fields available as of now:
-  * title
-  * description
-  * logDate
-  * logDateTime
-  * @timestamp
+<br>
 
 ## Pre-Requisits ##
 * An elasticsearch cluster. <!-- single node clusters are also allowed -->
 * Minimum 1 master node. Can provide multiple hosts for fault-tolerance.
 * Kibana <!-- if you need to visualize -->
 
+<br>
 
 ## Usage ##
+#### Access/API Logs ####
 Import the package at the very start of you application. <!-- typically, app.js -->
 
-### Access/API Logs ###
+<br>
 
 ```javascript
 /* 
@@ -102,7 +130,9 @@ if (process.env.exportAccessLogs) {
 }
 ```
 
-### ErrorLogs ###
+<br>
+
+#### ErrorLogs ####
 
 ```javascript
 /* 
