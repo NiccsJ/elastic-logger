@@ -19,12 +19,12 @@ const checkSuppliedArguments = async ({ err, esConnObj, microServiceName, brand_
 
         if (argsMissing && exporterType != 'initializer') {
             if (!defaultLoggerDetails) defaultLoggerDetails = require('../utils/elasticHandler/initializeElasticLogger').esClientObj.defaultLoggerDetails;
-            esConnObj = defaultLoggerDetails.esConnObj ? defaultLoggerDetails.esConnObj : defaultInitializationValues.esConnObj;
-            batchSize = defaultLoggerDetails.batchSize ? defaultLoggerDetails.batchSize : defaultInitializationValues.batchSize;
-            microServiceName = defaultLoggerDetails.microServiceName ? defaultLoggerDetails.microServiceName : defaultInitializationValues.microServiceName;
-            brand_name = defaultLoggerDetails.brand_name ? defaultLoggerDetails.brand_name : defaultInitializationValues.brand_name;
-            cs_env = defaultLoggerDetails.cs_env ? defaultLoggerDetails.cs_env : defaultInitializationValues.cs_env;
-            timezone = defaultLoggerDetails.timezone ? defaultLoggerDetails.timezone : defaultInitializationValues.timezone;
+            esConnObj = (defaultLoggerDetails && defaultLoggerDetails.esConnObj) ? defaultLoggerDetails.esConnObj : defaultInitializationValues.esConnObj;
+            batchSize = (defaultLoggerDetails && defaultLoggerDetails.batchSize) ? defaultLoggerDetails.batchSize : defaultInitializationValues.batchSize;
+            microServiceName = (defaultLoggerDetails && defaultLoggerDetails.microServiceName) ? defaultLoggerDetails.microServiceName : defaultInitializationValues.microServiceName;
+            brand_name = (defaultLoggerDetails && defaultLoggerDetails.brand_name) ? defaultLoggerDetails.brand_name : defaultInitializationValues.brand_name;
+            cs_env = (defaultLoggerDetails && defaultLoggerDetails.cs_env) ? defaultLoggerDetails.cs_env : defaultInitializationValues.cs_env;
+            timezone = (defaultLoggerDetails && defaultLoggerDetails.timezone) ? defaultLoggerDetails.timezone : defaultInitializationValues.timezone;
             argsValid = await checkSuppliedArguments({ err, esConnObj, microServiceName, brand_name, cs_env, batchSize, timezone, exporterType });
             argsMissing = !argsValid;
         }
