@@ -18,8 +18,8 @@ const getIndexTemplate = async (templateName) => {
 
     } catch (err) {
         const { statusCode } = err.meta;
-        if(statusCode === 404 ) return false; //tempalte doesn't exist
-        throw (err);  
+        if (statusCode === 404) return false; //tempalte doesn't exist
+        throw (err);
     }
 };
 
@@ -55,7 +55,7 @@ const getILM = async (policy) => {
 
     } catch (err) {
         const { statusCode } = err.meta;
-        if(statusCode === 404 ) return false; //tempalte doesn't exist
+        if (statusCode === 404) return false; //tempalte doesn't exist
         throw (err);
     }
 };
@@ -150,7 +150,7 @@ const bulkIndex = async (logs, index) => {
         if (!client) client = require('./initializeElasticLogger').esClientObj.client;
 
         // const body = logs.flatMap(log => [{ index: {} }, log]);
-        const body = bwcFlatMap(logs, (log) => { return [{ index: {}}, log ] });
+        const body = bwcFlatMap(logs, (log) => { return [{ index: {} }, log] });
         const options = {};
         options.index = index;
         options.refresh = true;
