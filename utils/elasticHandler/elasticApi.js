@@ -1,5 +1,6 @@
 let client;
 const { errorHandler, elasticError, dynamicError } = require('../errorHandler');
+const bwcFlatMap = require('array.prototype.flatmap');
 
 //handle bootstrapping index
 //add cloud metadata
@@ -17,8 +18,8 @@ const getIndexTemplate = async (templateName) => {
 
     } catch (err) {
         const { statusCode } = err.meta;
-        if(statusCode === 404 ) return false; //tempalte doesn't exist
-        throw (err);  
+        if (statusCode === 404) return false; //tempalte doesn't exist
+        throw (err);
     }
 };
 
@@ -54,7 +55,7 @@ const getILM = async (policy) => {
 
     } catch (err) {
         const { statusCode } = err.meta;
-        if(statusCode === 404 ) return false; //tempalte doesn't exist
+        if (statusCode === 404) return false; //tempalte doesn't exist
         throw (err);
     }
 };
@@ -148,7 +149,8 @@ const bulkIndex = async (logs, index) => {
     try {
         if (!client) client = require('./initializeElasticLogger').esClientObj.client;
 
-        const body = logs.flatMap(log => [{ index: {} }, log]);
+        // const body = logs.flatMap(log => [{ index: {} }, log]);
+        const body = bwcFlatMap(logs, (log) => { return [{ index: {} }, log] });
         const options = {};
         options.index = index;
         options.refresh = true;
