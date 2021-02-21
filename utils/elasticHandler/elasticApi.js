@@ -1,5 +1,6 @@
 let client;
 const { errorHandler, elasticError, dynamicError } = require('../errorHandler');
+const bwcFlatMap = require('array.prototype.flatmap');
 
 //handle bootstrapping index
 //add cloud metadata
@@ -148,7 +149,8 @@ const bulkIndex = async (logs, index) => {
     try {
         if (!client) client = require('./initializeElasticLogger').esClientObj.client;
 
-        const body = logs.flatMap(log => [{ index: {} }, log]);
+        // const body = logs.flatMap(log => [{ index: {} }, log]);
+        const body = bwcFlatMap(logs, (log) => { return [{ index: {}, log }] });
         const options = {};
         options.index = index;
         options.refresh = true;
