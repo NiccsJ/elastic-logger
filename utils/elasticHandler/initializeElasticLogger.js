@@ -31,7 +31,7 @@ const connection = async (esConnObj) => {
 /**
  * Bootstraps the `elastic-looger`. Initialises the `outgoing api logger`. Sets up bootstrap `index` and `ILM`.
  * @param {object} i This defaults to values from `initialisation` object if specified else from `constants.js` - an Object that has 13 properties.
- * @param {object} [i.esConnObj] - (Optional) The connection object. Defaults to values from constants.js
+ * @param {object=} [i.esConnObj] - (Optional) The connection object. Defaults to values from constants.js
  * @param {string=} [i.microServiceName] - (Optional) Name of microService. Defaults to constants.js
  * @param {string=} [i.brand_name] - (Optional) Name of brand. Defaults to constants.js
  * @param {string=} [i.cs_env] - (Optional) The environment name. Defaults to constants.js
