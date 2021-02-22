@@ -1,6 +1,6 @@
 const momentTimezone = require('moment-timezone');
-const { checkSuppliedArguments, shipDataToElasticsearh } = require('../utils/utilities');
-const { errorHandler, elasticError } = require('../utils/errorHandler');
+const { shipDataToElasticsearh } = require('../utils/utilities');
+const { errorHandler } = require('../utils/errorHandler');
 
 const exportAccessLogs = ({ microServiceName, brand_name, cs_env, batchSize, timezone = 'Asia/Calcutta' }) => {
     return (req, res, next) => {
