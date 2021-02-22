@@ -2,6 +2,17 @@ const momentTimezone = require('moment-timezone');
 const { shipDataToElasticsearh } = require('../utils/utilities');
 const { errorHandler } = require('../utils/errorHandler');
 
+/**
+ * Initiates the `incoming access` logger
+ * @param {object} [a = This Defaults to values from `initialisation` object if specified else from `constants.js`] - an Object that has 5 properties.
+ * @param {string=} [a.microServiceName] - (Optional) Name of microService. Defaults to values from initialisation object if specified else constants.js
+ * @param {string=} [a.brand_name] - (Optional) Name of brand. Defaults to values from initialisation object if specified else constants.js
+ * @param {string=} [a.cs_env] - (Optional) The environment name. Defaults to values from initialisation object if specified else constants.js
+ * @param {number=} [a.batchSize] - (Optional) Size of batch. Defaults to values from initialisation object if specified else constants.js
+ * @param {string=} [a.timezone] - (Optional) Timezone to be used by moment. Defaults to values from initialisation object if specified else constants.js
+ * 
+ */
+
 const exportAccessLogs = ({ microServiceName, brand_name, cs_env, batchSize, timezone = 'Asia/Calcutta' }) => {
     return (req, res, next) => {
         try {
