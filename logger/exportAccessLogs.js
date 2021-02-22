@@ -1,6 +1,7 @@
 const momentTimezone = require('moment-timezone');
 const { shipDataToElasticsearh } = require('../utils/utilities');
 const { errorHandler } = require('../utils/errorHandler');
+const { defaultInitializationValues } = require('../utils/constants');
 
 /**
  * Initiates the `incoming access` logger
@@ -36,12 +37,12 @@ const exportAccessLogs = ({ microServiceName, brand_name, cs_env, batchSize, tim
                         statusCode,
                         statusMessage,
                         processingTime,
-                        microService: microServiceName ? microServiceName : 'default',
+                        microService: microServiceName ? microServiceName : (defaultInitializationValues && defaultInitializationValues.microServiceName) ? defaultInitializationValues.microServiceName : 'default' ,
                         logType: 'accessLogs',
                         logDate: date,
                         "@timestamp": dateTime
                     };
-
+                    
                     shipDataToElasticsearh({ log, microServiceName, brand_name, cs_env, batchSize, timezone, exporterType: 'access' });
 
                 } catch (err) {
