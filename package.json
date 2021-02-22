@@ -13,8 +13,7 @@
     "dependencies": {
         "@elastic/elasticsearch": "^7.10.0",
         "array.prototype.flatmap": "^1.2.4",
-        "install": "^0.13.0",
         "moment-timezone": "^0.5.33",
-        "npm": "^7.5.4"
+        "dotenv": "^5.0.1"
     }
 }

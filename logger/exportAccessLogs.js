@@ -1,6 +1,6 @@
 const momentTimezone = require('moment-timezone');
-const { checkSuppliedArguments, shipDataToElasticsearh } = require('../utils/utilities');
-const { errorHandler, elasticError } = require('../utils/errorHandler');
+const { shipDataToElasticsearh } = require('../utils/utilities');
+const { errorHandler } = require('../utils/errorHandler');
 
 const exportAccessLogs = ({ microServiceName, brand_name, cs_env, batchSize, timezone = 'Asia/Calcutta' }) => {
     return (req, res, next) => {
@@ -8,7 +8,7 @@ const exportAccessLogs = ({ microServiceName, brand_name, cs_env, batchSize, tim
             const requestStart = Date.now();
             res.on('finish', () => {
                 try {
-                    const { headers, httpVersion, method, socket, url } = req;
+                    const { headers, httpVersion, method, socket, url, originalUrl } = req;
                     const { remoteAddress, remoteFamily } = socket;
                     const { statusCode, statusMessage } = res;
                     // const headers2 = resp.getHeaders();
@@ -16,7 +16,7 @@ const exportAccessLogs = ({ microServiceName, brand_name, cs_env, batchSize, tim
                     const date = momentTimezone().tz(timezone).startOf('day').format('YYYY-MM-DD');
                     const dateTime = momentTimezone().tz(timezone).format();
                     const log = { // move to a separate parser
-                        url,
+                        url: (url == '/') ? originalUrl : url,
                         method,
                         headers,
                         // headers2,

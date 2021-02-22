@@ -1,3 +1,4 @@
+require("dotenv").config();
 const { initializeElasticLogger } = require('./utils/elasticHandler/initializeElasticLogger');
 const { exportAccessLogs} = require('./logger/exportAccessLogs');
 const { exportErrorLogs } = require('./logger/exportErrorLogs');
