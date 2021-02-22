@@ -102,6 +102,26 @@ const morphError = async ({ err, microServiceName, date, dateTime, status, scope
     }
 };
 
+
+/**
+ * The `error handler`
+ * @param {object} e This defaults to values from `initialisation` object if specified else from `constants.js` - an Object that has 13 properties.
+ * @param {object} e.err - (Required) The error object
+ * @param {string=} [e.microServiceName] - (Optional) Name of microService. Defaults to values from initialisation object if specified else constants.js
+ * @param {string=} [e.brand_name] - (Optional) Name of brand. Defaults to values from initialisation object if specified else constants.js
+ * @param {string=} [e.cs_env] - (Optional) The environment name. Defaults to values from initialisation object if specified else constants.js
+ * @param {number=} [e.batchSize] - (Optional) Size of batch. Defaults to values from initialisation object if specified else constants.js
+ * @param {string=} [e.timezone] - (Optional) Timezone to be used by moment. Defaults to values from initialisation object if specified else constants.js
+ * @param {string=} [e.scope] - (Optional) Scope if any can be defined. Defaults to values from initialisation object if specified else constants.js
+ * @param {number=} [e.status] - (Optional) Status code if any can be defined. Defaults to values from initialisation object if specified else constants.js
+ * @param {object=} [e.metadata] - (Optional) Additional metadata to be added. Defaults to values from initialisation object if specified else constants.js
+ * @param {boolean=} [e.ship = true] - (Optional) Bool to ship the log to ES. Defaults to values from initialisation object if specified else constants.js
+ * @param {boolean=} [e.log = true] - (Optional) Bool to log the error on console. Defaults to values from initialisation object if specified else constants.js
+ * @param {boolean=} [e.self = false] - For internal use
+ * @param {boolean=} [e.exporter = false] - For internal use
+ * 
+ */
+
 const errorHandler = async ({ err, ship = true, log = true, self = false, timezone = 'Asia/Calcutta', scope = '@niccsj/elastic-logger', status = null, exporter = false, batchSize, brand_name, cs_env, microServiceName, metadata }) => {
     try {
         console.log('ship, self, timezone, scope', ship, self, timezone, scope);
