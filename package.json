@@ -1,6 +1,6 @@
 {
     "name": "@niccsj/elastic-logger",
-    "version": "3.0.7",
+    "version": "3.0.8",
     "description": "Ships error logs, inbount api logs and outbound api logs to elasticsearch cluster.",
     "license": "MIT",
     "repository": "NiccsJ/elastic-logger",
