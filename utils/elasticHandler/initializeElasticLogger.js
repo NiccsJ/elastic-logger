@@ -60,7 +60,7 @@ const initializeElasticLogger = async ({ esConnObj, brand_name, cs_env, microSer
 		//setup values/defaults from index template
 		primaryShards = primaryShards ? primaryShards : defaultIndexTemplateValues.number_of_shards;
 		replicaShards = replicaShards ? replicaShards : defaultIndexTemplateValues.number_of_replicas;
-		overwriteILM = overwriteILM ? overwriteILM : defaultIndexTemplateValues.overwriteILM;
+		overwrite = overwrite ? overwrite : defaultIndexTemplateValues.create;
 
 		//set up values/defaults for ILM from constants
 		policyName = (cs_env && brand_name) ? `${cs_env}_${brand_name}_policy` : defaultIlmPolicyValues.policyName;
@@ -69,7 +69,7 @@ const initializeElasticLogger = async ({ esConnObj, brand_name, cs_env, microSer
 		warmAfter = warmAfter ? warmAfter : defaultIlmPolicyValues.warmAfter;
 		deleteAfter = deleteAfter ? deleteAfter : defaultIlmPolicyValues.deleteAfter;
 		shrinkShards = shrinkShards ? shrinkShards : (primaryShards === 1) ? primaryShards : (primaryShards - 1);
-		overwrite = overwrite ? overwrite : defaultIlmPolicyValues.overwrite;
+		overwriteILM = overwriteILM ? overwriteILM : defaultIlmPolicyValues.overwriteILM;
 
 		const initializerValid = await checkSuppliedArguments({ err: 'initializing', esConnObj, microServiceName, brand_name, cs_env, batchSize, timezone, exporterType: 'initializer' });
 		if (initializerValid) {
