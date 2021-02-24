@@ -19,13 +19,17 @@ const checkSuppliedArguments = async ({ err, esConnObj, microServiceName, brand_
 
         if (argsMissing && exporterType != 'initializer') {
             if (!defaultLoggerDetails) defaultLoggerDetails = require('../utils/elasticHandler/initializeElasticLogger').esClientObj.defaultLoggerDetails;
-            esConnObj = (defaultLoggerDetails && defaultLoggerDetails.esConnObj) ? defaultLoggerDetails.esConnObj : defaultInitializationValues.esConnObj;
-            batchSize = (defaultLoggerDetails && defaultLoggerDetails.batchSize) ? defaultLoggerDetails.batchSize : defaultInitializationValues.batchSize;
-            microServiceName = (defaultLoggerDetails && defaultLoggerDetails.microServiceName) ? defaultLoggerDetails.microServiceName : defaultInitializationValues.microServiceName;
-            brand_name = (defaultLoggerDetails && defaultLoggerDetails.brand_name) ? defaultLoggerDetails.brand_name : defaultInitializationValues.brand_name;
-            cs_env = (defaultLoggerDetails && defaultLoggerDetails.cs_env) ? defaultLoggerDetails.cs_env : defaultInitializationValues.cs_env;
-            timezone = (defaultLoggerDetails && defaultLoggerDetails.timezone) ? defaultLoggerDetails.timezone : defaultInitializationValues.timezone;
-            argsValid = await checkSuppliedArguments({ err, esConnObj, microServiceName, brand_name, cs_env, batchSize, timezone, exporterType });
+            const newDefaultLogger = {};
+            newDefaultLogger.esConnObj = (defaultLoggerDetails && defaultLoggerDetails.esConnObj) ? defaultLoggerDetails.esConnObj : defaultInitializationValues.esConnObj;
+            newDefaultLogger.batchSize = (defaultLoggerDetails && defaultLoggerDetails.batchSize) ? defaultLoggerDetails.batchSize : defaultInitializationValues.batchSize;
+            newDefaultLogger.microServiceName = (defaultLoggerDetails && defaultLoggerDetails.microServiceName) ? defaultLoggerDetails.microServiceName : defaultInitializationValues.microServiceName;
+            newDefaultLogger.brand_name = (defaultLoggerDetails && defaultLoggerDetails.brand_name) ? defaultLoggerDetails.brand_name : defaultInitializationValues.brand_name;
+            newDefaultLogger.cs_env = (defaultLoggerDetails && defaultLoggerDetails.cs_env) ? defaultLoggerDetails.cs_env : defaultInitializationValues.cs_env;
+            newDefaultLogger.timezone = (defaultLoggerDetails && defaultLoggerDetails.timezone) ? defaultLoggerDetails.timezone : defaultInitializationValues.timezone;
+            defaultLoggerDetails = { ...newDefaultLogger };
+            newDefaultLogger.err = err;
+            newDefaultLogger.exporterType = exporterType;
+            argsValid = await checkSuppliedArguments(newDefaultLogger);
             argsMissing = !argsValid;
         }
 
@@ -78,15 +82,15 @@ const shipDataToElasticsearh = async ({ log, esConnObj, microServiceName, brand_
         brand_name = brand_name ? brand_name : defaultLoggerDetails.brand_name;
         cs_env = cs_env ? cs_env : defaultLoggerDetails.cs_env;
         const index = `${cs_env}_${brand_name}`;
-        // console.log('Current Batch    Total Batch Size', batchRequest.length, batchSize);
         batchRequest.push(log);
+        // console.log('Current Batch    Total Batch Size', batchRequest.length, batchSize);
         if ((batchRequest.length >= batchSize)) {
             bulkIndex(batchRequest, index);
             batchRequest = [];
         }
 
     } catch (err) {
-        errorHandler({ err, ship: true, scope: '@niccsj/elastic-logger.shipDataToElasticsearh' });
+        errorHandler({ err, ship: true, self: true, scope: '@niccsj/elastic-logger.shipDataToElasticsearh' });
     }
 };
 
