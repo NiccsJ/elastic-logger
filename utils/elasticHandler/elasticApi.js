@@ -63,46 +63,18 @@ const setUpILM = async ({ policyName, size, hotDuration, warmAfter, deleteAfter,
         if (!client) client = require('./initializeElasticLogger').esClientObj.client;
         if (!overwriteILM) if (await getILM(policyName)) return;
 
-        const hotPhase = {
-            min_age: "0ms",
-            actions: {
-                rollover: {
-                    max_size: size,
-                    max_age: hotDuration
-                }
-            }
-        };
-        const warmPhase = {
-            min_age: warmAfter,
-            actions: {
-                forcemerge: {
-                    max_num_segments: 1
-                },
-                migrate: {
-                    enabled: false
-                },
-                shrink: {
-                    number_of_shards: shrinkShards
-                }
-            }
-        };
-        const deletePhase = {
-            min_age: deleteAfter,
-            actions: {
-                delete: {
-                    delete_searchable_snapshot: true
-                }
-            }
-        };
+        const hotPhase = { min_age: "0ms", actions: { rollover: { max_size: size, max_age: hotDuration } } };
+        const warmPhase = { min_age: warmAfter, actions: { forcemerge: { max_num_segments: 1 }, migrate: { enabled: false }, shrink: { number_of_shards: shrinkShards } } };
+        const deletePhase = { min_age: deleteAfter, actions: { delete: { delete_searchable_snapshot: true } } };
 
         const options = {};
         options.policy = policyName; //nameOnly
         options.body = {};
         options.body.policy = {};
         options.body.policy.phases = {};
-        options.body.phases.hot = hotPhase;
-        options.body.phases.warm = warmPhase;
-        options.body.phases.delete = deletePhase;
+        options.body.policy.phases.hot = hotPhase;
+        options.body.policy.phases.warm = warmPhase;
+        options.body.policy.phases.delete = deletePhase;
 
         const { body: response } = await client.ilm.putLifecycle(options);
 
