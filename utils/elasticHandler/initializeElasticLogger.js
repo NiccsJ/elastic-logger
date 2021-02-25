@@ -43,7 +43,7 @@ const connection = async (esConnObj) => {
  * 
  */
 
-const initializeElasticLogger = async ({ esConnObj, brand_name, cs_env, microServiceName, batchSize, timezone, ilmObject = {}, indexSettings = {} , exportApiLogs = true }) => {
+const initializeElasticLogger = async ({ esConnObj, brand_name, cs_env, microServiceName, batchSize, timezone, ilmObject = {}, indexSettings = {}, exportApiLogs = true }) => {
 	try {
 		let { size, hotDuration, warmAfter, deleteAfter, shrinkShards, overwriteILM } = ilmObject;
 		let { primaryShards, replicaShards, overwrite } = indexSettings;
@@ -68,7 +68,7 @@ const initializeElasticLogger = async ({ esConnObj, brand_name, cs_env, microSer
 		hotDuration = hotDuration ? hotDuration : defaultIlmPolicyValues.hotDuration;
 		warmAfter = warmAfter ? warmAfter : defaultIlmPolicyValues.warmAfter;
 		deleteAfter = deleteAfter ? deleteAfter : defaultIlmPolicyValues.deleteAfter;
-		shrinkShards = shrinkShards ? shrinkShards : (primaryShards === 1) ? primaryShards : (primaryShards - 1);
+		shrinkShards = shrinkShards ? (primaryShards % (primaryShards - shrinkShards) == 0) ? (primaryShards - shrinkShards) : defaultIlmPolicyValues.shrinkShards : defaultIlmPolicyValues.shrinkShards;
 		overwriteILM = overwriteILM ? overwriteILM : defaultIlmPolicyValues.overwriteILM;
 
 		const initializerValid = await checkSuppliedArguments({ err: 'initializing', esConnObj, microServiceName, brand_name, cs_env, batchSize, timezone, exporterType: 'initializer' });

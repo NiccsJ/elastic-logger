@@ -45,7 +45,7 @@ const defaultIlmPolicyValues = {
     hotDuration: '2d', 
     warmAfter: '1h', 
     deleteAfter: '15d',
-    shrinkShards: defaultIndexTemplateValues.number_of_shards,
+    shrinkShards: 1,
     overwriteILM: false
 };
 
