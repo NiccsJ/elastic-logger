@@ -51,8 +51,8 @@ const initializeElasticLogger = async ({ esConnObj, brand_name, cs_env, microSer
 		//set up values/defaults for initialization from constants
 		esConnObj = esConnObj ? esConnObj : defaultInitializationValues.esConnObj;
 		elasticUrl = esConnObj.url ? esConnObj.url : defaultInitializationValues.esConnObj.url;
-		brand_name = brand_name ? brand_name : defaultInitializationValues.brand_name;
-		cs_env = cs_env ? cs_env : defaultInitializationValues.cs_env;
+		brand_name = (brand_name ? brand_name : defaultInitializationValues.brand_name).toLowerCase();
+		cs_env = (cs_env ? cs_env : defaultInitializationValues.cs_env).toLowerCase();
 		microServiceName = microServiceName ? microServiceName : defaultInitializationValues.microServiceName;
 		batchSize = batchSize ? batchSize : defaultInitializationValues.batchSize;
 		timezone = timezone ? timezone : defaultInitializationValues.timezone;
