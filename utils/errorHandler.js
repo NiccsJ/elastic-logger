@@ -1,5 +1,5 @@
 let shipDataToElasticsearh;
-let esClientObj = require('./elasticHandler/initializeElasticLogger');
+const { defaultInitializationValues } = require('./constants');
 const momentTimezone = require('moment-timezone');
 
 class elasticError extends Error {
@@ -89,7 +89,7 @@ const morphError = async ({ err, microServiceName, date, dateTime, status, scope
         errObj['metadata'] = err.metadata ? err.metadata : metadata ? metadata : null;
         errObj['scope'] = errObj['scope'] ? errObj['scope'] : scope;
         errObj['type'] = errObj['type'] ? errObj['type'] : err.type ? err.type : null;
-        errObj['microService'] = microServiceName ? microServiceName : 'default';
+        errObj['microService'] = microServiceName ? microServiceName : (defaultInitializationValues && defaultInitializationValues.microServiceName ) ? defaultInitializationValues.microServiceName : 'default';
         errObj['logType'] = 'errorLogs';
         errObj['logDate'] = date;
         errObj["@timestamp"] = dateTime;
