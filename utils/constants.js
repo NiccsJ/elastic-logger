@@ -31,6 +31,7 @@ const defaultInitializationValues = {
 
 const defaultIndexTemplateValues = {
     create: false,
+    priority: 1,
     name: 'default_elastic_logger_template',
     index_patterns: 'default_elastic_logger-*',
     number_of_shards: 3,

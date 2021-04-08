@@ -46,7 +46,7 @@ const connection = async (esConnObj) => {
 const initializeElasticLogger = async ({ esConnObj, brand_name, cs_env, microServiceName, batchSize, timezone, ilmObject = {}, indexSettings = {}, exportApiLogs = true }) => {
 	try {
 		let { size, hotDuration, warmAfter, deleteAfter, shrinkShards, overwriteILM } = ilmObject;
-		let { primaryShards, replicaShards, overwrite } = indexSettings;
+		let { primaryShards, replicaShards, priority, overwrite } = indexSettings;
 
 		//set up values/defaults for initialization from constants
 		esConnObj = esConnObj ? esConnObj : defaultInitializationValues.esConnObj;
@@ -60,6 +60,7 @@ const initializeElasticLogger = async ({ esConnObj, brand_name, cs_env, microSer
 		//setup values/defaults from index template
 		primaryShards = primaryShards ? primaryShards : defaultIndexTemplateValues.number_of_shards;
 		replicaShards = replicaShards ? replicaShards : defaultIndexTemplateValues.number_of_replicas;
+		priority = priority ? priority : defaultIndexTemplateValues.priority;
 		overwrite = overwrite ? overwrite : defaultIndexTemplateValues.create;
 
 		//set up values/defaults for ILM from constants
@@ -78,7 +79,7 @@ const initializeElasticLogger = async ({ esConnObj, brand_name, cs_env, microSer
 			esClientObj.defaultLoggerDetails = { esConnObj, brand_name, cs_env, microServiceName, batchSize, timezone };
 			console.log('-----------------------ELASTIC-LOGGER INITIALIZED-----------------------');
 			setUpILM({ policyName, size, hotDuration, warmAfter, deleteAfter, shrinkShards, overwriteILM });
-			putIndexTemplate({ brand_name, cs_env, microServiceName, primaryShards, replicaShards, overwrite });
+			putIndexTemplate({ brand_name, cs_env, microServiceName, primaryShards, replicaShards, priority, overwrite });
 			if (exportApiLogs) overwriteHttpProtocol({ microServiceName, brand_name, cs_env, batchSize, timezone, elasticUrl });
 			return true;
 		}
