@@ -27,8 +27,9 @@ const createInitialIndex = async ({ brand_name, cs_env, microServiceName }) => {
 
         const options = {};
         const aliases = {};
-        const bootStrapIndex = `${cs_env}_${brand_name}-000000`;
-        aliases[`${cs_env}_${brand_name}`] = { "is_write_index": true };
+        const prefix = (cs_env && brand_name) ? `${cs_env}_${brand_name}` : 'default_elastic_logger';
+        const bootStrapIndex = `${prefix}$$-000000`;
+        aliases[`${prefix}$$`] = { "is_write_index": true };
         options.index = bootStrapIndex;
         options.body = { aliases };
         const { body: response } = await client.indices.create(options);
@@ -97,13 +98,13 @@ const putIndexTemplate = async ({ brand_name, cs_env, microServiceName, primaryS
         options.create = overwrite ? overwrite : false;
         options.body = {};
         options.body.priority = priority;
-        options.body.index_patterns = [`${prefix}-*`];
+        options.body.index_patterns = [`${prefix}$$-*`];
         options.body.template = {
             settings: {
                 number_of_shards: primaryShards,
                 number_of_replicas: replicaShards,
                 "index.lifecycle.name": ilmPolicyName,
-                "index.lifecycle.rollover_alias": `${prefix}`
+                "index.lifecycle.rollover_alias": `${prefix}$$`
             }
         };
 
@@ -123,7 +124,7 @@ const bulkIndex = async (logs, index) => {
         // const body = logs.flatMap(log => [{ index: {} }, log]);
         const body = bwcFlatMap(logs, (log) => { return [{ index: {} }, log] });
         const options = {};
-        options.index = index;
+        options.index = `${index}$$`;
         options.refresh = true;
         options.body = body;
         const { body: bulkResponse } = await client.bulk(options);
