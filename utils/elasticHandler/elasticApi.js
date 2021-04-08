@@ -83,7 +83,7 @@ const setUpILM = async ({ policyName, size, hotDuration, warmAfter, deleteAfter,
     }
 };
 
-const putIndexTemplate = async ({ brand_name, cs_env, microServiceName, primaryShards, replicaShards, overwrite }) => {
+const putIndexTemplate = async ({ brand_name, cs_env, microServiceName, primaryShards, replicaShards, priority, overwrite }) => {
     try {
         const prefix = (cs_env && brand_name) ? `${cs_env}_${brand_name}` : 'default_elastic_logger';
         const templateName = `${prefix}_template`;
@@ -96,6 +96,7 @@ const putIndexTemplate = async ({ brand_name, cs_env, microServiceName, primaryS
         options.name = templateName;
         options.create = overwrite ? overwrite : false;
         options.body = {};
+        options.body.priority = priority;
         options.body.index_patterns = [`${prefix}-*`];
         options.body.template = {
             settings: {
