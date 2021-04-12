@@ -1,7 +1,7 @@
 let client;
 const { errorHandler, elasticError, dynamicError } = require('../errorHandler');
 const bwcFlatMap = require('array.prototype.flatmap');
-
+const { debug } = require('../constants');
 
 const getIndexTemplate = async (templateName) => {
     try {
@@ -134,7 +134,7 @@ const bulkIndex = async (logs, index) => {
             throw new elasticError({ name: 'ElasticAPI error:', message: `${JSON.stringify(bulkResponse.items)}`, type: 'elastic-logger', status: 888 });
         }
         //handle error
-        // console.log('bulkResponse---->', bulkResponse);
+        if(debug) console.log('bulkResponse---->', bulkResponse);
     } catch (err) {
         errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.bulkIndex' });
     }
