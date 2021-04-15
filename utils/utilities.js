@@ -83,7 +83,7 @@ const shipDataToElasticsearh = async ({ log, esConnObj, microServiceName, brand_
         cs_env = cs_env ? cs_env : defaultLoggerDetails.cs_env;
         const index = `${cs_env}_${brand_name}`;
         batchRequest.push(log);
-        if(debug) console.log('Current Batch    Total Batch Size', batchRequest.length, batchSize);
+        if(debug) if(debug) console.log('\n<><><><> DEBUG <><><><>\nCurrent Batch: ', batchRequest.length, 'Total Batch Size: ', batchSize, '\n');
         if ((batchRequest.length >= batchSize)) {
             bulkIndex(batchRequest, index);
             batchRequest = [];

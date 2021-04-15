@@ -134,7 +134,7 @@ const bulkIndex = async (logs, index) => {
             throw new elasticError({ name: 'ElasticAPI error:', message: `${JSON.stringify(bulkResponse.items)}`, type: 'elastic-logger', status: 888 });
         }
         //handle error
-        if(debug) console.log('bulkResponse---->', bulkResponse);
+        if(debug) console.log('\n<><><><> DEBUG <><><><>\nbulkResponse: ', bulkResponse, '\n');
     } catch (err) {
         errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.bulkIndex' });
     }
