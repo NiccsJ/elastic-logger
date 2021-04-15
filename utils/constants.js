@@ -50,8 +50,11 @@ const defaultIlmPolicyValues = {
     overwriteILM: false
 };
 
+const debug = process.env.elasticDebug ? process.env.elasticDebug : false;
+
 module.exports = {
     defaultInitializationValues,
     defaultIlmPolicyValues,
-    defaultIndexTemplateValues
+    defaultIndexTemplateValues,
+    debug
 };

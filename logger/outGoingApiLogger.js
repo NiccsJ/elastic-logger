@@ -23,7 +23,7 @@ const overwriteHttpProtocol = async ({ microServiceName, brand_name, cs_env, bat
                                 const ips = ipPorts.map(ipPort => { return ipPort.split(":")[0] });
                                 const hostname = (options && options.href) ? options.href : (options && options.hostname) ? options.hostname : null;
                                 if (hostname && !ips.includes(hostname)) {
-                                    // console.log('\n <><><><><><><><><> hostname, ips <><><><><><><><><> \n', hostname, ips, '\n<><><><><><><><><><><><>\n');
+                                    if (debug) console.log('\n<><><><> DEBUG <><><><>\nRequest Hostname: ', hostname, '\nElastic-Kibana IPs/URLs: ', ips, '\n');
                                     let href = options.href ? options.href : options.hostname + options.path;
                                     outBoundApiLogger({ href, requestStart, statusCode: res.statusCode, microServiceName, brand_name, cs_env, batchSize, timezone });
                                 }
