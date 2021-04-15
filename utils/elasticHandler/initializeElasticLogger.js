@@ -4,7 +4,7 @@ const { checkSuppliedArguments } = require('../utilities');
 const { errorHandler } = require('../errorHandler');
 const { setUpILM, putIndexTemplate } = require('../elasticHandler/elasticApi');
 const { overwriteHttpProtocol } = require('../../logger/outGoingApiLogger');
-const { defaultIlmPolicyValues, defaultIndexTemplateValues, defaultInitializationValues } = require('../constants');
+const { defaultIlmPolicyValues, defaultIndexTemplateValues, defaultInitializationValues, defaultKibanaValues } = require('../constants');
 
 const connection = async (esConnObj) => {
 	try {
@@ -47,7 +47,7 @@ const initializeElasticLogger = async ({ esConnObj, brand_name, cs_env, microSer
 	try {
 		let { size, hotDuration, warmAfter, deleteAfter, shrinkShards, overwriteILM } = ilmObject;
 		let { primaryShards, replicaShards, priority, overwrite } = indexSettings;
-
+		let { kibanaUrl } = defaultKibanaValues;
 		//set up values/defaults for initialization from constants
 		esConnObj = esConnObj ? esConnObj : defaultInitializationValues.esConnObj;
 		elasticUrl = esConnObj.url ? esConnObj.url : defaultInitializationValues.esConnObj.url;
@@ -77,10 +77,16 @@ const initializeElasticLogger = async ({ esConnObj, brand_name, cs_env, microSer
 			if (esClientObj && !esClientObj.client) esClientObj.client = await connection(esConnObj);
 			esClientObj.status = true;
 			esClientObj.defaultLoggerDetails = { esConnObj, brand_name, cs_env, microServiceName, batchSize, timezone };
+			
 			console.log('-----------------------ELASTIC-LOGGER INITIALIZED-----------------------');
+			if (kibanaUrl) {
+				console.log('-----------------------KIBANA APIs ENABLED-----------------------');
+				const { createIndexPattern } = require('../kibanaHandler/kibanaApis');
+				createIndexPattern({ brand_name, cs_env });
+			}
 			setUpILM({ policyName, size, hotDuration, warmAfter, deleteAfter, shrinkShards, overwriteILM });
 			putIndexTemplate({ brand_name, cs_env, microServiceName, primaryShards, replicaShards, priority, overwrite });
-			if (exportApiLogs) overwriteHttpProtocol({ microServiceName, brand_name, cs_env, batchSize, timezone, elasticUrl });
+			if (exportApiLogs) overwriteHttpProtocol({ microServiceName, brand_name, cs_env, batchSize, timezone, elasticUrl, kibanaUrl });
 			return true;
 		}
 	} catch (err) {
@@ -92,5 +98,5 @@ const initializeElasticLogger = async ({ esConnObj, brand_name, cs_env, microSer
 
 module.exports = {
 	initializeElasticLogger,
-	esClientObj
+	esClientObj,
 }
