@@ -1,8 +1,8 @@
 let url;
 const momentTimezone = require('moment-timezone');
 const { errorHandler, elasticError } = require('../utils/errorHandler');
-const { checkSuppliedArguments, shipDataToElasticsearh } = require('../utils/utilities');
-const {debug} = require('../utils/constants');
+const { shipDataToElasticsearh } = require('../utils/utilities');
+const { debug } = require('../utils/constants');
 
 const overwriteHttpProtocol = async ({ microServiceName, brand_name, cs_env, batchSize, timezone = 'Asia/Calcutta', elasticUrl = process.env.elasticUrl, kibanaUrl = process.env.kibanaUrl }) => {
     try {

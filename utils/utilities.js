@@ -13,6 +13,7 @@ const getEc2Metadata = async () => {
 
 const checkSuppliedArguments = async ({ err, esConnObj, microServiceName, brand_name, cs_env, batchSize, timezone, exporterType }) => {
     try {
+        if (debug) console.log('\n<><><><> DEBUG <><><><>\ncheckSuppliedArguments---: ', 'exporterType: ', exporterType, '\n');
         let argsValid = false;
         const suppliedArgs = { err, esConnObj, microServiceName, brand_name, cs_env, batchSize, timezone };
         let argsMissing = Object.values(suppliedArgs).some(o => !o);
@@ -84,14 +85,14 @@ const shipDataToElasticsearh = async ({ log, esConnObj, microServiceName, brand_
         const index = `${cs_env}_${brand_name}`;
         batchRequest.push(log);
         // if(debug) console.log('Current Batch    Total Batch Size', batchRequest.length, batchSize);
-        if(debug) console.log('\n<><><><> DEBUG <><><><>\nCurrent Batch: ', batchRequest.length, 'Total Batch Size: ', batchSize, '\n');
+        if (debug) console.log('\n<><><><> DEBUG <><><><>\nCurrent Batch: ', batchRequest.length, 'Total Batch Size: ', batchSize, '\n');
         if ((batchRequest.length >= batchSize)) {
             bulkIndex(batchRequest, index);
             batchRequest = [];
         }
 
     } catch (err) {
-        errorHandler({ err, ship: true, self: true, scope: '@niccsj/elastic-logger.shipDataToElasticsearh' });
+        errorHandler({ err, ship: false, self: true, scope: '@niccsj/elastic-logger.shipDataToElasticsearh' });
     }
 };
 

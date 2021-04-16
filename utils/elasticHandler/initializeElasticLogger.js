@@ -81,7 +81,7 @@ const initializeElasticLogger = async ({ esConnObj, brand_name, cs_env, microSer
 			console.log('-----------------------ELASTIC-LOGGER INITIALIZED-----------------------');
 			if (kibanaUrl) {
 				console.log('-----------------------KIBANA APIs ENABLED-----------------------');
-				const { createIndexPattern } = require('../kibanaHandler/kibanaApis');
+				const { createIndexPattern } = require('../kibanaHandler/indexPatternApis');
 				createIndexPattern({ brand_name, cs_env });
 			}
 			setUpILM({ policyName, size, hotDuration, warmAfter, deleteAfter, shrinkShards, overwriteILM });

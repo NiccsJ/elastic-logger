@@ -1,6 +1,7 @@
 let client;
 const { errorHandler, elasticError, dynamicError } = require('../errorHandler');
 const bwcFlatMap = require('array.prototype.flatmap');
+const safeStringify = require('json-stringify-safe');
 const { debug } = require('../constants');
 
 const getIndexTemplate = async (templateName) => {
@@ -131,7 +132,7 @@ const bulkIndex = async (logs, index) => {
 
         if (bulkResponse.errors) {
             const errorObj = bulkResponse.errors.items;
-            throw new elasticError({ name: 'ElasticAPI error:', message: `${JSON.stringify(bulkResponse.items)}`, type: 'elastic-logger', status: 888 });
+            throw new elasticError({ name: 'ElasticAPI error:', message: `${safeStringify(bulkResponse.items)}`, type: 'elastic-logger', status: 888 });
         }
         //handle error
         if(debug) console.log('\n<><><><> DEBUG <><><><>\nbulkResponse: ', bulkResponse, '\n');
