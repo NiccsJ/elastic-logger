@@ -48,7 +48,7 @@ const overwriteHttpProtocol = async ({ microServiceName, brand_name, cs_env, bat
             }
         };
 
-        // patch(httpObj);
+        patch(httpObj);
         patch(httpsObj);
     } catch (err) {
         errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.overwriteHttpProtocol' });

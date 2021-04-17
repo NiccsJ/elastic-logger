@@ -19,7 +19,6 @@ const { errorHandler } = require('../utils/errorHandler');
 
 const exportErrorLogs = async ({ err, microServiceName, brand_name, cs_env, batchSize, timezone = 'Asia/Calcutta', scope = 'global', status = null, metadata, ship = true, log = true }) => {
     try {
-        // const logObj = await 
         errorHandler({ err, ship, log, timezone, scope, status, exporter: true, batchSize, brand_name, cs_env, microServiceName, metadata });
         // shipDataToElasticsearh({ log: logObj, microServiceName, brand_name, cs_env, batchSize, timezone, exporterType: 'error' });
     } catch (err) {

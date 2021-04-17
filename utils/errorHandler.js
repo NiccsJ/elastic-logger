@@ -59,18 +59,18 @@ const handleAxiosErrors = async ({ err, date, dateTime, ship = false, scope }) =
     }
 };
 
-const morphError = async ({ err, microServiceName, date, dateTime, status, scope = null, metadata }) => {
+const morphError = async ({ err, microServiceName, date, dateTime, status, scope = 'global', metadata }) => {
     try {
         let errObj = {};
-        if (err && err.stack) {
-            errObj['name'] = err.name ? err.name : null;
-            errObj['message'] = err.message ? err.message : err.stack.split("\n")[0];
-            errObj['description'] = err.description ? err.description : err.stack ? err.stack : 'none';
-            errObj['meta'] = err.meta ? err.meta : null;
-            errObj['status'] = err.status ? err.status : status ? status : null;
-            errObj['scope'] = err.scope ? err.scope : null;
-        } else if (err.response && err.response.data) {
-            errObj['name'] = err.name ? err.name : null;
+
+        //common keys
+        errObj['parsed'] = true;
+        errObj['name'] = err.name ? err.name : null;
+        errObj['message'] = err.message ? err.message : err.stack ? err.stack.split("\n")[0] : 'Unable to parse message';
+        errObj['description'] = err.description ? err.description : err.stack ? err.stack : err;
+
+        //conditional keys
+        if (err.response && err.response.data) {
             errObj['type'] = (err.response.data.error && err.response.data.error.type) ? err.response.data.error.type : err.response.data.error ? err.response.data.error : null;
             errObj['reason'] = (err.response.data.error && err.response.data.error.reason) ? err.response.data.error.reason : null;
             errObj['url'] = (err.response.config && err.response.config.url) ? err.response.config.url : null;
@@ -78,23 +78,24 @@ const morphError = async ({ err, microServiceName, date, dateTime, status, scope
             errObj['status'] = err.response.status ? err.response.status : err.response.data.status ? err.response.data.status : null;
             errObj['statusText'] = err.response.statusText ? err.response.statusText : null;
             errObj['allowedMethod'] = err.response.headers ? err.response.headers.allow : null;
-        } else {
-            errObj['name'] = err.name ? err.name : null;
-            errObj['message'] = err;
-            errObj['description'] = 'Unable to parse error';
-            errObj['status'] = status ? status : 0;
-            errObj['parsed'] = false;
         }
 
         //common keys
+        // errObj['name'] = err.name ? err.name : null;
+        // errObj['message'] = err.message ? err.message : err.stack ? err.stack.split("\n")[0] : 'Unable to parse message';
+        // errObj['description'] = err.description ? err.description : err.stack ? err.stack : err;
         errObj['metadata'] = err.metadata ? err.metadata : metadata ? metadata : null;
-        errObj['scope'] = errObj['scope'] ? errObj['scope'] : scope;
+        errObj['meta'] = err.meta ? err.meta : null;
+
         errObj['type'] = errObj['type'] ? errObj['type'] : err.type ? err.type : null;
-        errObj['microService'] = microServiceName ? microServiceName : (defaultInitializationValues && defaultInitializationValues.microServiceName ) ? defaultInitializationValues.microServiceName : 'default';
+        errObj['status'] = errObj['status'] ? errObj['status'] : err.status ? err.status : status ? status : 0;
+
+        errObj['scope'] = err.scope ? err.scope : scope;
+        errObj['microService'] = microServiceName ? microServiceName : (defaultInitializationValues && defaultInitializationValues.microServiceName) ? defaultInitializationValues.microServiceName : 'default';
         errObj['logType'] = 'errorLogs';
         errObj['logDate'] = date;
         errObj["@timestamp"] = dateTime;
-        errObj['parsed'] = errObj['parsed'] === false ? false : true;
+        errObj['parsed'] = (errObj['message'] === 'Unable to parse message') ? false : true;
 
         return errObj;
 
@@ -128,7 +129,6 @@ const errorHandler = async ({ err, ship = true, log = true, self = false, timezo
         console.log('ship, self, timezone, scope', ship, self, timezone, scope);
         const date = momentTimezone().tz(timezone).startOf('day').format('YYYY-MM-DD');
         const dateTime = momentTimezone().tz(timezone).format();
-
         const morphedError = {};
         morphedError.main = '<-----@niccsj/elastic-logger: errorHandler----->';
         morphedError.data = await morphError({ err, microServiceName, date, dateTime, status, scope, metadata });
