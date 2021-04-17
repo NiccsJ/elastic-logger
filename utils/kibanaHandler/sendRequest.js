@@ -1,8 +1,8 @@
+let esConnObj;
 const safeStringify = require('json-stringify-safe');
 const axios = require('axios');
 const { defaultKibanaValues, debug } = require('../constants');
 const { errorHandler, dynamicError } = require('../errorHandler');
-const { esConnObj } = require("./indexPatternApis");
 
 const sendRequest = async ({ apiEndpoint, method, queryParams = null, postData = null }) => {
     try {
@@ -10,9 +10,7 @@ const sendRequest = async ({ apiEndpoint, method, queryParams = null, postData =
             esConnObj = require('@niccsj/elastic-logger/utils/elasticHandler/initializeElasticLogger').esClientObj.defaultLoggerDetails.esConnObj;
         const { kibanaUrl } = defaultKibanaValues;
         const { auth, authType } = esConnObj;
-        // if (!apiEndpoint || !method) throw new dynamicError({ name: 'KibanaAPI error:', message: `Kibana APIs doesn't support authType: none`, type: 'elastic-logger', status: 777, metadata: { apiEndpoint, method } });
-        if (authType == 'none')
-            throw new dynamicError({ name: 'KibanaAPI error:', message: `Kibana APIs doesn't support authType: none`, type: 'elastic-logger', status: 777, metadata: { result } });
+        if (authType == 'none') throw new dynamicError({ name: 'KibanaAPI error:', message: `Kibana APIs doesn't support authType: none`, type: 'elastic-logger', status: 777, metadata: { result } });
 
         const options = {};
         options.method = method;
@@ -32,7 +30,6 @@ const sendRequest = async ({ apiEndpoint, method, queryParams = null, postData =
         options.url = !queryParams ? (kibanaUrl + '/' + apiEndpoint) : (kibanaUrl + '/' + apiEndpoint + '?' + queryParams);
         if (postData)
             options.data = postData;
-        // console.log('kibana options--------------->', options);
         const apiResponse = {};
         await axios(options)
             .then((result) => {
@@ -45,12 +42,13 @@ const sendRequest = async ({ apiEndpoint, method, queryParams = null, postData =
                 apiResponse.statusCode = err.statusCode ? err.statusCode : err.message ? Number(err.message.split('code ')[1]) : apiResponse.errCode ? apiResponse.errCode : 511;
                 // if (debug) console.log('\n<><><><> DEBUG <><><><>\nSendRequest METHOD and API: ', method, apiEndpoint, '\nSendRequest result: ', safeStringify(apiResponse), '\n');
             });
-        if (debug)
-            console.log('\n<><><><> DEBUG <><><><>\nSendRequest METHOD and API: ', method, apiEndpoint, '\nSendRequest result: ', safeStringify(apiResponse), '\n');
+        if (debug) console.log('\n<><><><> DEBUG <><><><>\nSendRequest METHOD and API: ', method, apiEndpoint, '\nSendRequest result: ', safeStringify(apiResponse), '\n');
         return apiResponse;
     } catch (err) {
         errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.sendRequest' });
     }
-
 };
-module.exports = { sendRequest };
+
+module.exports = { 
+    sendRequest
+};

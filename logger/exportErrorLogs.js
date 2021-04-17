@@ -1,5 +1,4 @@
-const { checkSuppliedArguments, shipDataToElasticsearh } = require('../utils/utilities');
-const { errorHandler, elasticError } = require('../utils/errorHandler');
+const { errorHandler } = require('../utils/errorHandler');
 
 /**
  * Initiates the `error logger`
@@ -21,7 +20,7 @@ const { errorHandler, elasticError } = require('../utils/errorHandler');
 const exportErrorLogs = async ({ err, microServiceName, brand_name, cs_env, batchSize, timezone = 'Asia/Calcutta', scope = 'global', status = null, metadata, ship = true, log = true }) => {
     try {
         // const logObj = await 
-        errorHandler({ err, ship, log, timezone, scope, status, exporter: true, brand_name, cs_env, microServiceName, metadata });
+        errorHandler({ err, ship, log, timezone, scope, status, exporter: true, batchSize, brand_name, cs_env, microServiceName, metadata });
         // console.log('babababbababa<<><><><><><><><><><><><>', logObj);
         // shipDataToElasticsearh({ log: logObj, microServiceName, brand_name, cs_env, batchSize, timezone, exporterType: 'error' });
     } catch (err) {
@@ -31,4 +30,4 @@ const exportErrorLogs = async ({ err, microServiceName, brand_name, cs_env, batc
 
 module.exports = {
     exportErrorLogs
-}
+};

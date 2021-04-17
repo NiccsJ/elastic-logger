@@ -77,13 +77,14 @@ const initializeElasticLogger = async ({ esConnObj, brand_name, cs_env, microSer
 			if (esClientObj && !esClientObj.client) esClientObj.client = await connection(esConnObj);
 			esClientObj.status = true;
 			esClientObj.defaultLoggerDetails = { esConnObj, brand_name, cs_env, microServiceName, batchSize, timezone };
-			
 			console.log('-----------------------ELASTIC-LOGGER INITIALIZED-----------------------');
+
 			if (kibanaUrl) {
 				console.log('-----------------------KIBANA APIs ENABLED-----------------------');
 				const { createIndexPattern } = require('../kibanaHandler/indexPatternApis');
 				createIndexPattern({ brand_name, cs_env });
 			}
+			
 			setUpILM({ policyName, size, hotDuration, warmAfter, deleteAfter, shrinkShards, overwriteILM });
 			putIndexTemplate({ brand_name, cs_env, microServiceName, primaryShards, replicaShards, priority, overwrite });
 			if (exportApiLogs) overwriteHttpProtocol({ microServiceName, brand_name, cs_env, batchSize, timezone, elasticUrl, kibanaUrl });
@@ -96,7 +97,7 @@ const initializeElasticLogger = async ({ esConnObj, brand_name, cs_env, microSer
 	}
 };
 
-module.exports = {
+module.exports = { 
 	initializeElasticLogger,
-	esClientObj,
-}
+	esClientObj
+};

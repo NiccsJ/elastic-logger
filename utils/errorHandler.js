@@ -135,7 +135,6 @@ const errorHandler = async ({ err, ship = true, log = true, self = false, timezo
         if (log) console.error('\n' + safeStringify(morphedError) + '\n');
         if (self) return; //return after one error from self
         if (ship) {
-            // if (exporter) return morphedError.data;
             if (!shipDataToElasticsearh) shipDataToElasticsearh = require('./utilities').shipDataToElasticsearh;
             shipDataToElasticsearh({ log: morphedError.data, microServiceName, brand_name, cs_env, batchSize, timezone, exporterType: 'error' });
         }

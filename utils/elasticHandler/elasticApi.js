@@ -1,7 +1,6 @@
 let client;
 const { errorHandler, elasticError, dynamicError } = require('../errorHandler');
 const bwcFlatMap = require('array.prototype.flatmap');
-const safeStringify = require('json-stringify-safe');
 const { debug } = require('../constants');
 
 const getIndexTemplate = async (templateName) => {
