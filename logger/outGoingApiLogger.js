@@ -1,15 +1,15 @@
 let url;
 const momentTimezone = require('moment-timezone');
 const { errorHandler, elasticError } = require('../utils/errorHandler');
-const { checkSuppliedArguments, shipDataToElasticsearh } = require('../utils/utilities');
+const { shipDataToElasticsearh } = require('../utils/utilities');
 const { debug } = require('../utils/constants');
 
-
-const overwriteHttpProtocol = async ({ microServiceName, brand_name, cs_env, batchSize, timezone = 'Asia/Calcutta', elasticUrl = process.env.elasticUrl }) => {
+const overwriteHttpProtocol = async ({ microServiceName, brand_name, cs_env, batchSize, timezone = 'Asia/Calcutta', elasticUrl = process.env.elasticUrl, kibanaUrl = process.env.kibanaUrl }) => {
     try {
         url = elasticUrl;
         if (!url) throw new elasticError({ name: 'Initialization failed:', message: `overwriteHttpProtocol: 'elasticUrl' argument missing`, type: 'elastic-logger', status: 999 });
         const urls = url.split(',');
+        if (kibanaUrl) urls.push(kibanaUrl);
         const httpObj = require('http');
         const httpsObj = require('https');
         const patch = (object) => {
@@ -94,4 +94,4 @@ const outBoundApiLogger = async ({ href, requestStart, statusCode, microServiceN
 
 module.exports = {
     overwriteHttpProtocol
-}
+};

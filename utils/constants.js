@@ -51,10 +51,12 @@ const defaultIlmPolicyValues = {
 };
 
 const debug = process.env.elasticDebug ? process.env.elasticDebug : false;
+const defaultKibanaValues = { kibanaUrl: process.env.kibanaUrl };
 
 module.exports = {
     defaultInitializationValues,
     defaultIlmPolicyValues,
     defaultIndexTemplateValues,
+    defaultKibanaValues,
     debug
 };

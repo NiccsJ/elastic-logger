@@ -62,4 +62,4 @@ const exportAccessLogs = ({ microServiceName, brand_name, cs_env, batchSize, tim
 
 module.exports = {
     exportAccessLogs
-}
+};
