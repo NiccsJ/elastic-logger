@@ -8,7 +8,7 @@ const getIndexPattern = async ({ indexPattern }) => {
     try {
         const method = 'GET';
         const apiEndpoint = 'api/saved_objects/_find';
-        const queryParams = `type=index-pattern&fields=title&per_page=1&search_fields=title&search=${indexPattern}`;
+        const queryParams = `type=index-pattern&fields=title&per_page=5&search_fields=title&search=${indexPattern}`;
         let result = await sendRequest({ apiEndpoint, method, queryParams });
         const { statusCode, body } = result;
 
@@ -17,7 +17,8 @@ const getIndexPattern = async ({ indexPattern }) => {
             if (total <= 0) {
                 result.statusCode = 404;
             } else {
-                if (saved_objects && saved_objects[0] && saved_objects[0]['attributes'] && saved_objects[0]['attributes']['title'] == indexPattern) {
+                const indexPatternExists = saved_objects.some((s) => s['attributes']['title'] == indexPattern );
+                if (indexPatternExists) {
                     result.statusCode = 200;
                     result.indexPatternId = saved_objects[0]['id'];
                 } else {
