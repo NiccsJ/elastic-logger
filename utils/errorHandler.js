@@ -124,7 +124,7 @@ const morphError = async ({ err, microServiceName, date, dateTime, status, scope
  * 
  */
 
-const errorHandler = async ({ err, ship = true, log = true, self = false, timezone = 'Asia/Calcutta', scope = '@niccsj/elastic-logger', status = null, exporter = false, batchSize, brand_name, cs_env, microServiceName, metadata }) => {
+const errorHandler = async ({ err, ship = false, log = true, self = false, timezone = 'Asia/Calcutta', scope = '@niccsj/elastic-logger', status = null, exporter = false, batchSize, brand_name, cs_env, microServiceName, metadata }) => {
     try {
         console.log('ship, self, timezone, scope', ship, self, timezone, scope);
         const date = momentTimezone().tz(timezone).startOf('day').format('YYYY-MM-DD');

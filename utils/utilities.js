@@ -89,7 +89,6 @@ const shipDataToElasticsearh = async ({ log, esConnObj, microServiceName, brand_
             bulkIndex(batchRequest, index);
             batchRequest = [];
         }
-
     } catch (err) {
         errorHandler({ err, ship: false, self: true, scope: '@niccsj/elastic-logger.shipDataToElasticsearh' });
     }
