@@ -41,10 +41,10 @@ const defaultIndexTemplateValues = {
 };
 
 const defaultIlmPolicyValues = {
-    policyName: 'default_elastic_logger_policy', 
-    size: '2gb', 
-    hotDuration: '2d', 
-    warmAfter: '1h', 
+    policyName: 'default_elastic_logger_policy',
+    size: '2gb',
+    hotDuration: '2d',
+    warmAfter: '1h',
     deleteAfter: '15d',
     shrinkShards: 1,
     overwriteILM: false

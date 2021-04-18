@@ -48,12 +48,12 @@ const overwriteHttpProtocol = async ({ microServiceName, brand_name, cs_env, bat
             }
         };
 
-        // patch(httpObj);
+        patch(httpObj);
         patch(httpsObj);
     } catch (err) {
         errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.overwriteHttpProtocol' });
     }
-}
+};
 
 const outBoundApiLogger = async ({ href, requestStart, statusCode, microServiceName, brand_name, cs_env, batchSize, timezone }) => {
     try {
@@ -90,7 +90,7 @@ const outBoundApiLogger = async ({ href, requestStart, statusCode, microServiceN
     } catch (err) {
         errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.outBoundApiLogger' });
     }
-}
+};
 
 module.exports = {
     overwriteHttpProtocol
