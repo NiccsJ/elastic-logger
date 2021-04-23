@@ -50,6 +50,25 @@ const defaultIlmPolicyValues = {
     overwriteILM: false
 };
 
+const defaultComponentTemplateObject = {
+    mapping: {
+        properties: {
+            description: {
+                type: "text",
+                fields: {
+                    keyword: {
+                        type: "keyword",
+                        ignore_above: 1024
+                    }
+                }
+            }
+        }
+    }
+};
+
+const metadataMapping = {};
+
+
 const debug = process.env.elasticDebug ? process.env.elasticDebug : false;
 const defaultKibanaValues = { kibanaUrl: process.env.kibanaUrl };
 
@@ -58,5 +77,6 @@ module.exports = {
     defaultIlmPolicyValues,
     defaultIndexTemplateValues,
     defaultKibanaValues,
+    defaultComponentTemplateObject,
     debug
 };

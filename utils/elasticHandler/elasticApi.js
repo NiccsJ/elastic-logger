@@ -21,6 +21,43 @@ const getIndexTemplate = async (templateName) => {
     }
 };
 
+const componetTemplateExists = async (componentTemplateName) => {
+    try {
+        if (!client) client = require('./initializeElasticLogger').esClientObj.client;
+
+        let componentTemplateExists = false;
+        const options = {};
+        options.name = componentTemplateName;
+        const { statusCode: status } = await client.cluster.existsComponentTemplate(options);
+        if (status == 200) componentTemplateExists = true;
+        return componentTemplateExists;
+    } catch (err) {
+        const { statusCode } = err.meta;
+        if (statusCode === 404) return false; //tempalte doesn't exist
+        throw (err);
+    }
+};
+
+const putComponetTemplate = async ({ componentTemplateName, mappings }) => {
+    try {
+        if (await componetTemplateExists(componentTemplateName)) return;
+        if (!client) client = require('./initializeElasticLogger').esClientObj.client;
+
+        const options = {};
+        options.name = componentTemplateName;
+        options.create = overwrite ? overwrite : false;
+        options.body = {};
+        options.body.priority = priority;
+        options.body.template = { mappings };
+        const { statusCode: status } = await cluster.putComponetTemplate(options);
+        if(status == 200) return true;
+    } catch (err) {
+        const { statusCode } = err.meta;
+        if (statusCode === 400) return false; //resource already exists
+        throw (err);
+    }
+};
+
 const createInitialIndex = async ({ brand_name, cs_env, microServiceName }) => {
     try {
         if (!client) client = require('./initializeElasticLogger').esClientObj.client;
@@ -99,14 +136,13 @@ const putIndexTemplate = async ({ brand_name, cs_env, microServiceName, primaryS
         options.body = {};
         options.body.priority = priority;
         options.body.index_patterns = [`${prefix}$$-*`];
-        options.body.template = {
-            settings: {
+        options.body.template = {};
+            settings = {
                 number_of_shards: primaryShards,
                 number_of_replicas: replicaShards,
                 "index.lifecycle.name": ilmPolicyName,
                 "index.lifecycle.rollover_alias": `${prefix}$$`
-            }
-        };
+            };
 
         const { body: response } = await client.indices.putIndexTemplate(options);
         const bootStrapIndex = await createInitialIndex({ brand_name, cs_env, microServiceName });
@@ -143,5 +179,6 @@ const bulkIndex = async (logs, index) => {
 module.exports = {
     bulkIndex,
     setUpILM,
-    putIndexTemplate
+    putIndexTemplate,
+    putComponetTemplate
 };
