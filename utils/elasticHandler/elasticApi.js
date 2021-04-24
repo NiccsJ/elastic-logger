@@ -27,7 +27,7 @@ const putDefaultComponetTemplate = async ({ mappings, overwriteMappings, compone
         if (notOverwrite) if (await componetTemplateExists([componentTemplateName])) return true;
         const options = {};
         options.name = componentTemplateName;
-        options.create = overwriteMappings; //Will overwrite if false, throws an tempalte exists exception otherwise! Yeah, talk about shit that don't make sense!
+        options.create = !overwriteMappings; //Will overwrite if false, throws an tempalte exists exception otherwise! Yeah, talk about shit that don't make sense!
         options.body = {};
         options.body.template = { mappings };
 
@@ -138,7 +138,7 @@ const putIndexTemplate = async ({ brand_name, cs_env, microServiceName, primaryS
 
         const options = {};
         options.name = templateName;
-        options.create = overwrite; //Will overwrite if false, throws an tempalte exists exception otherwise! Yeah, talk about shit that don't make sense!
+        options.create = !overwrite; //Will overwrite if false, throws an tempalte exists exception otherwise! Yeah, talk about shit that don't make sense!
         options.body = {};
         options.body.priority = priority;
         options.body.index_patterns = [`${prefix}$$-*`];
