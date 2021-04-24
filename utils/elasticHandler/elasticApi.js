@@ -3,25 +3,49 @@ const { errorHandler, elasticError, dynamicError } = require('../errorHandler');
 const bwcFlatMap = require('array.prototype.flatmap');
 const { debug } = require('../constants');
 
-const getIndexTemplate = async (templateName) => {
+//Componemt Tempalte
+const componetTemplateExists = async (componentTemplateName) => {
     try {
         if (!client) client = require('./initializeElasticLogger').esClientObj.client;
 
-        let templateExists = false;
-        const options = {};
-        options.name = templateName;
-        const { statusCode: status } = await client.indices.getIndexTemplate(options);
-        if (status == 200) templateExists = true;
-        return templateExists;
+        let componentExists = false;
+        const { statusCode: status } = await client.cluster.existsComponentTemplate({ name: componentTemplateName });
+        if (status == 200) componentExists = true;
+        console.log('componentTemplateExists-------------------------->', componentTemplateName, status);
+        return componentExists;
 
     } catch (err) {
-        const { statusCode } = err.meta;
+        console.log('ERROR componentTemplateExists-------------------------->', err);
+        const { statusCode } = err && err.meta ? err.meta : null;
         if (statusCode === 404) return false; //tempalte doesn't exist
         throw (err);
     }
 };
 
-const createInitialIndex = async ({ brand_name, cs_env, microServiceName }) => {
+const putDefaultComponetTemplate = async ({ mappings, overwriteMappings, componentTemplateName }) => {
+    try {
+        if (!client) client = require('./initializeElasticLogger').esClientObj.client;
+        if (!overwriteMappings) if (await componetTemplateExists(['default_component_template'])) return true;
+        const options = {};
+        options.name = componentTemplateName;
+        options.create = overwriteMappings;
+        options.body = {};
+        options.body.template = { mappings };
+
+        const { body: response, statusCode: status } = await client.cluster.putComponentTemplate(options);
+        if (debug) console.log('\n<><><><> DEBUG <><><><>\nputDefaultComponetTemplate: ', status, response, '\n');
+        if (status == 200) return true;
+
+    } catch (err) {
+        // console.log('ERROR putDefaultComponetTemplate-------------------------->', err);
+        const { statusCode } = (err && err.meta) ? err.meta : null;
+        if (statusCode === 400) return false; //resource already exists
+        throw (err);
+    }
+};
+// ========================================
+
+const createInitialIndex = async ({ brand_name, cs_env }) => {
     try {
         if (!client) client = require('./initializeElasticLogger').esClientObj.client;
 
@@ -38,6 +62,24 @@ const createInitialIndex = async ({ brand_name, cs_env, microServiceName }) => {
     } catch (err) {
         const { statusCode } = err.meta;
         if (statusCode === 400) return false; //resource already exists
+        throw (err);
+    }
+};
+
+const getIndexTemplate = async (templateName) => {
+    try {
+        if (!client) client = require('./initializeElasticLogger').esClientObj.client;
+
+        let templateExists = false;
+        const options = {};
+        options.name = templateName;
+        const { statusCode: status } = await client.indices.getIndexTemplate(options);
+        if (status == 200) templateExists = true;
+        return templateExists;
+
+    } catch (err) {
+        const { statusCode } = err.meta;
+        if (statusCode === 404) return false; //tempalte doesn't exist
         throw (err);
     }
 };
@@ -84,31 +126,27 @@ const setUpILM = async ({ policyName, size, hotDuration, warmAfter, deleteAfter,
     }
 };
 
-const putIndexTemplate = async ({ brand_name, cs_env, microServiceName, primaryShards, replicaShards, priority, overwrite }) => {
+const putIndexTemplate = async ({ brand_name, cs_env, microServiceName, primaryShards, replicaShards, priority, overwrite, componentTemplateName, mappings, overwriteMappings }) => {
     try {
+        if (!client) client = require('./initializeElasticLogger').esClientObj.client;
+        const updateDefaultComponentTemplate = await putDefaultComponetTemplate({ mappings, overwriteMappings, componentTemplateName });
         const prefix = (cs_env && brand_name) ? `${cs_env}_${brand_name}` : 'default_elastic_logger';
         const templateName = `${prefix}_template`;
         const ilmPolicyName = `${prefix}_policy`;
-
-        if (await getIndexTemplate(templateName)) return;
-        if (!client) client = require('./initializeElasticLogger').esClientObj.client;
+        if (!overwrite) if (await getIndexTemplate(templateName)) return;
 
         const options = {};
         options.name = templateName;
         options.create = overwrite ? overwrite : false;
+        options.cause = overwrite ? "updates" : null;
         options.body = {};
         options.body.priority = priority;
         options.body.index_patterns = [`${prefix}$$-*`];
-        options.body.template = {
-            settings: {
-                number_of_shards: primaryShards,
-                number_of_replicas: replicaShards,
-                "index.lifecycle.name": ilmPolicyName,
-                "index.lifecycle.rollover_alias": `${prefix}$$`
-            }
-        };
+        options.body.template = { settings: { number_of_shards: primaryShards, number_of_replicas: replicaShards, "index.lifecycle.name": ilmPolicyName, "index.lifecycle.rollover_alias": `${prefix}$$` } };
+        if (updateDefaultComponentTemplate) options.body.composed_of= [componentTemplateName];
 
-        const { body: response } = await client.indices.putIndexTemplate(options);
+        const { body: response, statusCode: status } = await client.indices.putIndexTemplate(options);
+        if (debug) console.log('\n<><><><> DEBUG <><><><>\nputIndexTemplate: ', response, '\n');
         const bootStrapIndex = await createInitialIndex({ brand_name, cs_env, microServiceName });
         // if (!bootStrapIndex) throw new elasticError({ name: 'ElasticAPI error:', message: '', type: 'elastic-logger', status: 888 });
 
@@ -134,7 +172,7 @@ const bulkIndex = async (logs, index) => {
             throw new elasticError({ name: 'ElasticAPI error:', message: `${safeStringify(bulkResponse.items)}`, type: 'elastic-logger', status: 888 });
         }
         //handle error
-        if(debug) console.log('\n<><><><> DEBUG <><><><>\nbulkResponse: ', bulkResponse, '\n');
+        if (debug) console.log('\n<><><><> DEBUG <><><><>\nbulkResponse: ', bulkResponse, '\n');
     } catch (err) {
         errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.bulkIndex' });
     }
@@ -143,5 +181,6 @@ const bulkIndex = async (logs, index) => {
 module.exports = {
     bulkIndex,
     setUpILM,
-    putIndexTemplate
+    putIndexTemplate,
+    putDefaultComponetTemplate
 };

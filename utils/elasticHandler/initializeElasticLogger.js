@@ -2,9 +2,9 @@ const esClientObj = {};
 const elasticsearch = require('@elastic/elasticsearch');
 const { checkSuppliedArguments } = require('../utilities');
 const { errorHandler } = require('../errorHandler');
-const { setUpILM, putIndexTemplate } = require('../elasticHandler/elasticApi');
+const { setUpILM, putIndexTemplate, putComponetTemplate } = require('../elasticHandler/elasticApi');
 const { overwriteHttpProtocol } = require('../../logger/outGoingApiLogger');
-const { defaultIlmPolicyValues, defaultIndexTemplateValues, defaultInitializationValues, defaultKibanaValues } = require('../constants');
+const { defaultIlmPolicyValues, defaultIndexTemplateValues, defaultInitializationValues, defaultKibanaValues, defaultComponetsTemplateSettings } = require('../constants');
 
 const connection = async (esConnObj) => {
 	try {
@@ -40,14 +40,16 @@ const connection = async (esConnObj) => {
  * @param {object=} [i.ilmObject] - (Optional) Object specifing ILM settings. Defaults to constants.js
  * @param {object=} [i.indexSettings] - (Optional) Object specifing index template settings. Defaults to constants.js
  * @param {boolean=} [i.exportApiLogs] - (Optional) Bool to enable outgoing api logger. Defaults to true
- * 
+ *
  */
 
 const initializeElasticLogger = async ({ esConnObj, brand_name, cs_env, microServiceName, batchSize, timezone, ilmObject = {}, indexSettings = {}, exportApiLogs = true }) => {
 	try {
 		let { size, hotDuration, warmAfter, deleteAfter, shrinkShards, overwriteILM } = ilmObject;
-		let { primaryShards, replicaShards, priority, overwrite } = indexSettings;
+		let { primaryShards, replicaShards, priority, overwrite, composed_of } = indexSettings;
 		let { kibanaUrl } = defaultKibanaValues;
+		let { mappings, overwriteMappings } = defaultComponetsTemplateSettings;
+
 		//set up values/defaults for initialization from constants
 		esConnObj = esConnObj ? esConnObj : defaultInitializationValues.esConnObj;
 		elasticUrl = esConnObj.url ? esConnObj.url : defaultInitializationValues.esConnObj.url;
@@ -62,6 +64,8 @@ const initializeElasticLogger = async ({ esConnObj, brand_name, cs_env, microSer
 		replicaShards = replicaShards ? replicaShards : defaultIndexTemplateValues.number_of_replicas;
 		priority = priority ? priority : defaultIndexTemplateValues.priority;
 		overwrite = overwrite ? overwrite : defaultIndexTemplateValues.create;
+		componentTemplateName = composed_of ? composed_of : defaultIndexTemplateValues.composed_of;
+
 
 		//set up values/defaults for ILM from constants
 		policyName = (cs_env && brand_name) ? `${cs_env}_${brand_name}_policy` : defaultIlmPolicyValues.policyName;
@@ -84,9 +88,10 @@ const initializeElasticLogger = async ({ esConnObj, brand_name, cs_env, microSer
 				const { createIndexPattern } = require('../kibanaHandler/indexPatternApis');
 				createIndexPattern({ brand_name, cs_env });
 			}
-			
+
 			setUpILM({ policyName, size, hotDuration, warmAfter, deleteAfter, shrinkShards, overwriteILM });
-			putIndexTemplate({ brand_name, cs_env, microServiceName, primaryShards, replicaShards, priority, overwrite });
+			// putComponetTemplate({});
+			putIndexTemplate({ brand_name, cs_env, microServiceName, primaryShards, replicaShards, priority, overwrite, componentTemplateName, mappings, overwriteMappings });
 			if (exportApiLogs) overwriteHttpProtocol({ microServiceName, brand_name, cs_env, batchSize, timezone, elasticUrl, kibanaUrl });
 			return true;
 		}
@@ -97,7 +102,7 @@ const initializeElasticLogger = async ({ esConnObj, brand_name, cs_env, microSer
 	}
 };
 
-module.exports = { 
+module.exports = {
 	initializeElasticLogger,
 	esClientObj
 };

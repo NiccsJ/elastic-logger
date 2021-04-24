@@ -121,7 +121,7 @@ const morphError = async ({ err, microServiceName, date, dateTime, status, scope
  * @param {boolean=} [e.log = true] - (Optional) Bool to log the error on console. Defaults to values from initialisation object if specified else constants.js
  * @param {boolean=} [e.self = false] - For internal use
  * @param {boolean=} [e.exporter = false] - For internal use
- * 
+ *
  */
 
 const errorHandler = async ({ err, ship = false, log = true, self = false, timezone = 'Asia/Calcutta', scope = '@niccsj/elastic-logger', status = null, exporter = false, batchSize, brand_name, cs_env, microServiceName, metadata }) => {
