@@ -3,6 +3,7 @@ let accessLoggerArgsValid = false; //needs to be validated only once
 let apiLoggerArgsValid = false; //needs to be validated only once
 let defaultLoggerDetails;
 let batchRequest = [];
+let argCheckCount = 0;
 const { bulkIndex } = require('./elasticHandler/elasticApi');
 const { errorHandler, elasticError } = require('./errorHandler');
 const { defaultInitializationValues, debug } = require('./constants');
@@ -13,13 +14,14 @@ const getEc2Metadata = async () => {
 
 const checkSuppliedArguments = async ({ err, esConnObj, microServiceName, brand_name, cs_env, batchSize, timezone, exporterType }) => {
     try {
-        if(debug) console.log('\n<><><><> DEBUG <><><><>\ncheckSuppliedArguments---: ', 'exporterType: ', exporterType, '\n');
+        if (debug) console.log('\n<><><><> DEBUG <><><><>\ncheckSuppliedArguments---: ', 'exporterType: ', exporterType, '\n');
         let argsValid = false;
         const suppliedArgs = { err, esConnObj, microServiceName, brand_name, cs_env, batchSize, timezone };
         let argsMissing = Object.values(suppliedArgs).some(o => !o);
 
         if (argsMissing && exporterType != 'initializer') {
             if (!defaultLoggerDetails) defaultLoggerDetails = require('../utils/elasticHandler/initializeElasticLogger').esClientObj.defaultLoggerDetails;
+            argCheckCount++;
             const newDefaultLogger = {};
             newDefaultLogger.esConnObj = (defaultLoggerDetails && defaultLoggerDetails.esConnObj) ? defaultLoggerDetails.esConnObj : defaultInitializationValues.esConnObj;
             newDefaultLogger.batchSize = (defaultLoggerDetails && defaultLoggerDetails.batchSize) ? defaultLoggerDetails.batchSize : defaultInitializationValues.batchSize;
@@ -30,7 +32,7 @@ const checkSuppliedArguments = async ({ err, esConnObj, microServiceName, brand_
             defaultLoggerDetails = { ...newDefaultLogger };
             newDefaultLogger.err = err;
             newDefaultLogger.exporterType = exporterType;
-            argsValid = await checkSuppliedArguments(newDefaultLogger);
+            if (argCheckCount < 2) argsValid = await checkSuppliedArguments(newDefaultLogger);
             argsMissing = !argsValid;
         }
 
@@ -57,7 +59,8 @@ const checkSuppliedArguments = async ({ err, esConnObj, microServiceName, brand_
         if (exporterType === 'initializer') initializerValid = argsValid;
         return argsValid;
     } catch (err) {
-        throw(err);
+        // throw(err);
+        errorHandler({ err, ship: false, self: true, scope: '@niccsj/elastic-logger.checkSuppliedArguments' });
     }
 };
 
@@ -84,7 +87,7 @@ const shipDataToElasticsearh = async ({ log, esConnObj, microServiceName, brand_
         cs_env = cs_env ? cs_env : defaultLoggerDetails.cs_env;
         const index = `${cs_env}_${brand_name}`;
         batchRequest.push(log);
-        if(debug) console.log('\n<><><><> DEBUG <><><><>\nCurrent Batch: ', batchRequest.length, 'Total Batch Size: ', batchSize, 'Index: ', index, '\n');
+        if (debug) console.log('\n<><><><> DEBUG <><><><>\nCurrent Batch: ', batchRequest.length, 'Total Batch Size: ', batchSize, 'Index: ', index, '\n');
         if ((batchRequest.length >= batchSize)) {
             bulkIndex(batchRequest, index);
             batchRequest = [];

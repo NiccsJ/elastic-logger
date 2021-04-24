@@ -16,6 +16,8 @@ $ npm install @niccsj/elastic-logger --save
  * Also, has the gives you an option to export outgoing api calls for tracking and logging.
  * Provies two custom Error classes and an errorHandler.
  * Automated index creation .via tempaltes. ILM enabled by default for rollover. A default policy is configured acc to values specied in constants.js. 
+ * Automated index pattern creation in Kibana. Refreshs index pattern on each restart.
+ * Can be used as a stand alone logging library.
  * Fields available as of now:
    * ErrorLogger: 
       * name
@@ -56,7 +58,7 @@ $ npm install @niccsj/elastic-logger --save
 
 <br>
 
-## Funtions and Classes ##
+## Funtions and Classes available for import ##
 * initializeElasticLogger({ esConnObj, brand_name, cs_env, microServiceName, batchSize, timezone, ilmObject = {}, indexSettings = {} })
   _Used to initialize elasticsearch client and setup default values._  <br>  
 * exportAccessLogs({ microServiceName, brand_name, cs_env, batchSize, timezone = 'Asia/Calcutta' })
@@ -69,6 +71,7 @@ $ npm install @niccsj/elastic-logger --save
   _An extended Error class used within the package, can be used in code for custom errors._ <br>
 * dynamicError({ name, message, metadata, type = 'nodejs', status })
   _An even extended elasticError, can be used in code to add custom error fields to the error object._  <br>
+* esClientObj _The elastic search clinet created within the library can be used within the code to add any custom functionality. Follows the standard elastic search API implementation_ <br>
 
 ## Usage ##
 #### Access/API Logs ####
@@ -244,7 +247,7 @@ To collect error exceptions caught with try/catch, you can either your your own 
     ```
     * Arguments explanation for errorHandler:
       * err = err | Object `  The error object ` ` Required `
-      * ship = false/true | Bool ` Boolean to specify whether or not to ship this exception to elasticsearch. Can be useful if you need to silent some errors. ` ` Optional | Defaults to true `
+      * ship = false/true | Bool ` Boolean to specify whether or not to ship this exception to elasticsearch. Can be useful if you need to silent some errors. ` ` Optional | Defaults to false `
       * log = false/true | Bool ` Boolean to specify whether or not to log the error to the console .via console.error() ` ` Optional | Defaults to true `
       * timezone = 'Asia/Calcutta' | String ` The timezone to be used. ` ` Optional | Defaults to 'Asia/Calcutta' `
       * metadata = { anyObject } | Object ` Addition variables/fields can to added to make pin point the origin of error `
