@@ -26,9 +26,9 @@ const defaultInitializationValues = {
             rejectUnauthorized: false
         }
     },
-    brand_name: process.env.BRAND_NAME,
-    cs_env: process.env.CS_ENV,
-    microServiceName: process.env.MS_NAME,
+    brand_name: process.env.BRAND_NAME ? process.env.BRAND_NAME : 'default',
+    cs_env: process.env.CS_ENV ? process.env.CS_ENV : 'default',
+    microServiceName: process.env.MS_NAME ? process.env.MS_ENV : 'default',
     batchSize: 20,
     timezone: 'Asia/Calcutta',
 };
@@ -42,7 +42,6 @@ const defaultIndexTemplateValues = {
     number_of_replicas: 1,
     "index.lifecycle.name": 'default_elastic_logger_policy',
     "index.lifecycle.rollover_alias": 'default_elastic_logger$$',
-    composed_of: "default_component_template"
 };
 
 const defaultIlmPolicyValues = {
@@ -55,16 +54,40 @@ const defaultIlmPolicyValues = {
     overwriteILM: false
 };
 
-const metadataMappings = { type: "object" };
-
-const defaultComponetsTemplateSettings = {
-    mappings: {
+const metadataCompomentTempalteSettings = {
+    metadataMappings: {
         properties: {
-            description: { type: "text", fields: { keyword: { type: "keyword", ignore_above: 2048 } } },
-            metadata: process.env.metadataMappings ? process.env.metadataMappings : metadataMappings
+            metadata: {
+                type: "object",
+                dynamic: process.env.strictMetadata ? true : false,
+                properties: process.env.metadataMappings ? process.env.metadataMappings : {
+                    "sessionId": { type: "text", fields: { keyword: { type: "keyword" } } },
+                    "psid": { type: "text", fields: { keyword: { type: "keyword" } } },
+                    "platform": { type: "text", fields: { keyword: { type: "keyword" } } },
+                    "workflowId": { type: "text", fields: { keyword: { type: "keyword" } } }
+                }
+            }
         }
     },
-    overwriteMappings: (process.env.metadataMappingsOverwrite && process.env.metadataMappingsOverwrite == true) ? true : false
+    overwriteMappings: (process.env.metadataMappingsOverwrite && process.env.metadataMappingsOverwrite == 'true') ? true : false,
+    // dynamicComponentName: "common_metadata_component_template"
+};
+
+const dynamicTemplateComponentTemplateSettings = {
+    dynamicMappings: {
+        // dynamic: true,
+        // date_detection: true,
+        // dynamic_date_formats: ["strict_date_optional_time", "yyyy/MM/dd HH:mm:ss Z||yyyy/MM/dd Z"],
+        dynamic_templates: [
+            {
+                "bypass_ignore_above_": {
+                    "mapping": { "type": "text", "fields": { "keyword": { "ignore_above": 1024, "type": "keyword" } } },
+                    "match_mapping_type": "string"
+                }
+            }
+        ]
+    },
+    // metadataComponentName: "common_dynamic_template_component_template"
 };
 
 module.exports = {
@@ -72,6 +95,7 @@ module.exports = {
     defaultIlmPolicyValues,
     defaultIndexTemplateValues,
     defaultKibanaValues,
-    defaultComponetsTemplateSettings,
+    dynamicTemplateComponentTemplateSettings,
+    metadataCompomentTempalteSettings,
     debug
 };
