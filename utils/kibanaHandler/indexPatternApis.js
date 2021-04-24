@@ -39,7 +39,7 @@ const getIndexPatternDetails = async ({ indexPattern }) => {
     try {
         const method = 'GET';
         const apiEndpoint = 'api/index_patterns/_fields_for_wildcard';
-        const queryParams = `pattern=${indexPattern}*&meta_fields=_source&meta_fields=_id&meta_fields=_type&meta_fields=_index&meta_fields=_score`;
+        const queryParams = `pattern=${indexPattern}&meta_fields=_source&meta_fields=_id&meta_fields=_type&meta_fields=_index&meta_fields=_score`;
         let result = await sendRequest({ apiEndpoint, method, queryParams });
         const { statusCode, body } = result;
 
