@@ -22,9 +22,9 @@ const defaultInitializationValues = {
             rejectUnauthorized: false
         }
     },
-    brand_name: process.env.BRAND_NAME,
-    cs_env: process.env.CS_ENV,
-    microServiceName: process.env.MS_NAME,
+    brand_name: process.env.BRAND_NAME ? process.env.BRAND_NAME : 'default',
+    cs_env: process.env.CS_ENV ? process.env.CS_ENV : 'default',
+    microServiceName: process.env.MS_NAME ? process.env.CS_ENV : 'default',
     batchSize: 20,
     timezone: 'Asia/Calcutta',
 };
