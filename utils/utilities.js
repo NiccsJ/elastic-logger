@@ -32,7 +32,7 @@ const checkSuppliedArguments = async ({ err, esConnObj, microServiceName, brand_
             defaultLoggerDetails = { ...newDefaultLogger };
             newDefaultLogger.err = err;
             newDefaultLogger.exporterType = exporterType;
-            if (argCheckCount < 2) argsValid = await checkSuppliedArguments(newDefaultLogger);
+            if (argCheckCount < 3) argsValid = await checkSuppliedArguments(newDefaultLogger);
             argsMissing = !argsValid;
         }
 
