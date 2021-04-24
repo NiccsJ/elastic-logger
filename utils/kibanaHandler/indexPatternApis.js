@@ -124,6 +124,6 @@ const createIndexPattern = async ({ brand_name, cs_env, internal = false }) => {
 };
 
 
-module.exports = { 
+module.exports = {
     createIndexPattern
 };

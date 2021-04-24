@@ -8,6 +8,10 @@ const METADATA_ENDPOINT = 'meta-data/';
 /*
 Default Values
 */
+
+const debug = process.env.elasticDebug ? process.env.elasticDebug : false;
+const defaultKibanaValues = { kibanaUrl: process.env.kibanaUrl };
+
 const defaultInitializationValues = {
     esConnObj: {
         url: process.env.elasticUrl,
@@ -37,7 +41,8 @@ const defaultIndexTemplateValues = {
     number_of_shards: 3,
     number_of_replicas: 1,
     "index.lifecycle.name": 'default_elastic_logger_policy',
-    "index.lifecycle.rollover_alias": 'default_elastic_logger$$'
+    "index.lifecycle.rollover_alias": 'default_elastic_logger$$',
+    composed_of: "default_component_template"
 };
 
 const defaultIlmPolicyValues = {
@@ -50,33 +55,23 @@ const defaultIlmPolicyValues = {
     overwriteILM: false
 };
 
-const defaultComponentTemplateObject = {
-    mapping: {
+const metadataMappings = { type: "object" };
+
+const defaultComponetsTemplateSettings = {
+    mappings: {
         properties: {
-            description: {
-                type: "text",
-                fields: {
-                    keyword: {
-                        type: "keyword",
-                        ignore_above: 1024
-                    }
-                }
-            }
+            description: { type: "text", fields: { keyword: { type: "keyword", ignore_above: 2048 } } },
+            metadata: process.env.metadataMappings ? process.env.metadataMappings : metadataMappings
         }
-    }
+    },
+    overwriteMappings: (process.env.metadataMappingsOverwrite && process.env.metadataMappingsOverwrite == true) ? true : false
 };
-
-const metadataMapping = {};
-
-
-const debug = process.env.elasticDebug ? process.env.elasticDebug : false;
-const defaultKibanaValues = { kibanaUrl: process.env.kibanaUrl };
 
 module.exports = {
     defaultInitializationValues,
     defaultIlmPolicyValues,
     defaultIndexTemplateValues,
     defaultKibanaValues,
-    defaultComponentTemplateObject,
+    defaultComponetsTemplateSettings,
     debug
 };
