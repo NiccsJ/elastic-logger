@@ -19,7 +19,7 @@ const checkSuppliedArguments = async ({ err, esConnObj, microServiceName, brand_
         const suppliedArgs = { err, esConnObj, microServiceName, brand_name, cs_env, batchSize, timezone };
         let argsMissing = Object.values(suppliedArgs).some(o => !o);
 
-        if (argsMissing && exporterType != 'initializer') {
+        if ( argCheckCount < 3 && argsMissing && exporterType != 'initializer') {
             if (!defaultLoggerDetails) defaultLoggerDetails = require('../utils/elasticHandler/initializeElasticLogger').esClientObj.defaultLoggerDetails;
             argCheckCount++;
             const newDefaultLogger = {};
@@ -32,7 +32,7 @@ const checkSuppliedArguments = async ({ err, esConnObj, microServiceName, brand_
             defaultLoggerDetails = { ...newDefaultLogger };
             newDefaultLogger.err = err;
             newDefaultLogger.exporterType = exporterType;
-            if (argCheckCount < 3) argsValid = await checkSuppliedArguments(newDefaultLogger);
+            argsValid = await checkSuppliedArguments(newDefaultLogger);
             argsMissing = !argsValid;
         }
 

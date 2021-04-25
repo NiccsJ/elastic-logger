@@ -11,7 +11,7 @@ const { defaultInitializationValues } = require('../utils/constants');
  * @param {string=} [a.cs_env] - (Optional) The environment name. Defaults to values from initialisation object if specified else constants.js
  * @param {number=} [a.batchSize] - (Optional) Size of batch. Defaults to values from initialisation object if specified else constants.js
  * @param {string=} [a.timezone] - (Optional) Timezone to be used by moment. Defaults to values from initialisation object if specified else constants.js
- * 
+ *
  */
 
 const exportAccessLogs = ({ microServiceName, brand_name, cs_env, batchSize, timezone = 'Asia/Calcutta' }) => {
@@ -42,7 +42,7 @@ const exportAccessLogs = ({ microServiceName, brand_name, cs_env, batchSize, tim
                         logDate: date,
                         "@timestamp": dateTime
                     };
-                    
+
                     shipDataToElasticsearh({ log, microServiceName, brand_name, cs_env, batchSize, timezone, exporterType: 'access' });
 
                 } catch (err) {
