@@ -2005,10 +2005,10 @@
 													"script": {
 														"exec": [
 															"if (pm.response.code === 200) {",
-															"    pm.collectionVariables.set('top_access_bargraph_lense_id', pm.response.json().id);",
+															"    pm.collectionVariables.set('top_api_bargraph_lense_id', pm.response.json().id);",
 															"} else {",
 															"    console.error('Status: ', pm.response.code, '\\nBody: ', pm.response.status, '\\n');",
-															"    throw new Error('Access log table lense creation failed!');",
+															"    throw new Error('Api log table lense creation failed!');",
 															"}",
 															""
 														],
@@ -2070,7 +2070,7 @@
 													"script": {
 														"exec": [
 															"if (pm.response.code === 200) {",
-															"    pm.collectionVariables.set('top_api_bargraph_lense_id', pm.response.json().id);",
+															"    pm.collectionVariables.set('top_access_bargraph_lense_id', pm.response.json().id);",
 															"} else {",
 															"    console.error('Status: ', pm.response.code, '\\nBody: ', pm.response.status, '\\n');",
 															"    throw new Error('Access log table lense creation failed!');",
