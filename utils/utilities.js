@@ -3,7 +3,7 @@ let accessLoggerArgsValid = false; //needs to be validated only once
 let apiLoggerArgsValid = false; //needs to be validated only once
 let defaultLoggerDetails;
 let batchRequest = [];
-let argCheckCount = 0;
+// let argCheckCount = 0;
 const { bulkIndex } = require('./elasticHandler/elasticApi');
 const { errorHandler, elasticError } = require('./errorHandler');
 const { defaultInitializationValues, debug } = require('./constants');
@@ -12,7 +12,7 @@ const getEc2Metadata = async () => {
 
 };
 
-const checkSuppliedArguments = async ({ err, esConnObj, microServiceName, brand_name, cs_env, batchSize, timezone, exporterType }) => {
+const checkSuppliedArguments = async ({ err, esConnObj, microServiceName, brand_name, cs_env, batchSize, timezone, exporterType }, argCheckCount = 0) => {
     try {
         if (debug) console.log('\n<><><><> DEBUG <><><><>\ncheckSuppliedArguments---: ', 'exporterType: ', exporterType, '\n');
         let argsValid = false;
@@ -32,7 +32,7 @@ const checkSuppliedArguments = async ({ err, esConnObj, microServiceName, brand_
             defaultLoggerDetails = { ...newDefaultLogger };
             newDefaultLogger.err = err;
             newDefaultLogger.exporterType = exporterType;
-            argsValid = await checkSuppliedArguments(newDefaultLogger);
+            argsValid = await checkSuppliedArguments(newDefaultLogger, argCheckCount);
             argsMissing = !argsValid;
         }
 
