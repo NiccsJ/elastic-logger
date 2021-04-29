@@ -28,7 +28,7 @@ const defaultInitializationValues = {
     },
     brand_name: process.env.BRAND_NAME ? process.env.BRAND_NAME : 'default',
     cs_env: process.env.CS_ENV ? process.env.CS_ENV : 'default',
-    microServiceName: process.env.MS_NAME ? process.env.MS_ENV : 'default',
+    microServiceName: process.env.MS_NAME ? process.env.MS_NAME : 'default',
     batchSize: 20,
     timezone: 'Asia/Calcutta',
 };
