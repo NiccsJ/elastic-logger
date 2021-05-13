@@ -3117,7 +3117,7 @@
 				"type": "text/javascript",
 				"exec": [
 					"//setting API KEY ENV",
-					"pm.variables.set(\"ApiKey\", \"\");",
+					"pm.variables.set(\"ApiKey\", \"apikeygoeshere\");",
 					"// pm.environment.unset(\"ApiKey\");"
 				]
 			}
