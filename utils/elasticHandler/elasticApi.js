@@ -1,6 +1,7 @@
 let client;
 const { errorHandler, elasticError } = require('../errorHandler');
 const bwcFlatMap = require('array.prototype.flatmap');
+const safeStringify = require('json-stringify-safe');
 const { debug } = require('../constants');
 
 //Componemt Tempalte
