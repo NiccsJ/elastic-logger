@@ -27,9 +27,9 @@ const defaultInitializationValues = {
         }
     },
     brand_name: process.env.BRAND_NAME ? process.env.BRAND_NAME : 'default',
-    cs_env: process.env.CS_ENV ? process.env.CS_ENV : 'default',
+    cs_env: process.env.elasticEnv ? process.env.elasticEnv : process.env.CS_ENV ? process.env.CS_ENV : 'default',
     microServiceName: process.env.MS_NAME ? process.env.MS_NAME : 'default',
-    batchSize: 20,
+    batchSize: 100,
     timezone: 'Asia/Calcutta',
 };
 
@@ -59,7 +59,7 @@ const metadataCompomentTempalteSettings = {
         properties: {
             metadata: {
                 type: "object",
-                dynamic: process.env.strictMetadata ? true : false,
+                dynamic: process.env.strictMetadata ? false : true,
                 properties: process.env.metadataMappings ? process.env.metadataMappings : {
                     "sessionId": { type: "text", fields: { keyword: { type: "keyword" } } },
                     "psid": { type: "text", fields: { keyword: { type: "keyword" } } },
