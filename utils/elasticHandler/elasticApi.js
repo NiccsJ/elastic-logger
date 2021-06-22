@@ -171,7 +171,7 @@ const bulkIndex = async (logs, index) => {
         const { body: bulkResponse } = await client.bulk(options);
 
         if (bulkResponse.errors) {
-            const errorObj = bulkResponse.errors.items;
+            // const errorObj = bulkResponse.errors.items;
             throw new elasticError({ name: 'ElasticAPI error:', message: `${safeStringify(bulkResponse.items)}`, type: 'elastic-logger', status: 888 });
         }
         //handle error
