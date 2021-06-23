@@ -90,7 +90,7 @@ const morphError = async ({ err, microServiceName, date, dateTime, status, scope
         errObj['type'] = errObj['type'] ? errObj['type'] : err.type ? err.type : null;
         errObj['status'] = errObj['status'] ? errObj['status'] : err.status ? err.status : status ? status : 0;
 
-        errObj['scope'] = err.scope ? err.scope : scope;
+        errObj['scope'] = err.tag ? err.tag : err.scope ? err.scope : scope;
         errObj['microService'] = microServiceName ? microServiceName : (defaultInitializationValues && defaultInitializationValues.microServiceName) ? defaultInitializationValues.microServiceName : 'default';
         errObj['logType'] = 'errorLogs';
         errObj['logDate'] = date;

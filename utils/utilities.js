@@ -50,7 +50,7 @@ const checkSuppliedArguments = async ({ err, esConnObj, microServiceName, brand_
             } else if (esConnObj && (esConnObj.authType == 'basic' || esConnObj.authType == 'api')) {
                 if (!esConnObj.auth) throw new elasticError({ name: 'Argument(s) validation error:', message: `Object 'esConnObj.auth' is required when 'esConnObj.authType' is not 'none'.`, type: 'elastic-logger', status: 998 });
                 if (esConnObj.authType == 'api' && !esConnObj.auth.apiKey) throw new elasticError({ name: 'Argument(s) validation error:', message: `Argument 'esConnObj.auth.apiKey' is required when 'esConnObj.authType' is 'api'.`, type: 'elastic-logger', status: 998 });
-                if (esConnObj.authType == 'basic' && !(esConnObj.auth.user && esConnObj.auth.pass)) throw new elasticError({ name: 'Argument(s) validation error:', message: `Arguments 'esConnObj.auth.user' and 'esConnObj.auth.pass' are required when 'esConnObj.authType' is 'basic'.`, type: 'nodejs', status: 998 });
+                if (esConnObj.authType == 'basic' && !(esConnObj.auth.username && esConnObj.auth.password) ) throw new elasticError({ name: 'Argument(s) validation error:', message: `Arguments 'esConnObj.auth.username' and 'esConnObj.auth.password' are required when 'esConnObj.authType' is 'basic'.`, type: 'nodejs', status: 998 });
                 argsValid = true;
             } else {
                 argsValid = true;
