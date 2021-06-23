@@ -13,7 +13,7 @@ npm install @niccsj/elastic-logger --save
 
 ## Features
 
-- Parses standard node.js error logs into clear JSON format and ships the logs from to an Elastic Search cluster. Enables ---easy visualization and aggregation--- in ---Kibana--- without the need of ---Logstash--- or any other log formatting tool.
+- Parses standard node.js error logs into clear JSON format and ships the logs from to an Elastic Search cluster. Enables ***easy visualization and aggregation*** in ***Kibana*** without the need of ***Logstash*** or any other log formatting tool.
 - Includes a middleware which captures and ships all the incoming api logs along with necessary details.
 - Also, has the gives you an option to export outgoing api calls for tracking and logging.
 - Provides two custom Error classes and an errorHandler.
@@ -63,19 +63,19 @@ npm install @niccsj/elastic-logger --save
 
 ## Functions and Classes available for import
 
-- initializeElasticLogger({ esConnObj, brand_name, cs_env, microServiceName, batchSize, timezone, ilmObject = {}, indexSettings = {} })
+- **initializeElasticLogger({ esConnObj, brand_name, cs_env, microServiceName, batchSize, timezone, ilmObject = {}, indexSettings = {} })**
   _Used to initialize elasticsearch client and setup default values._  
-- exportAccessLogs({ microServiceName, brand_name, cs_env, batchSize, timezone = 'Asia/Calcutta' })
+- **exportAccessLogs({ microServiceName, brand_name, cs_env, batchSize, timezone = 'Asia/Calcutta' })**
   _Used to enable access logs shipping._  
-- exportErrorLogs({ err, ship = true, log = true, self = false, timezone = 'Asia/Calcutta', scope = '@niccsj/elastic-logger', status = null, exporter = false, batchSize, brand_name, cs_env, microServiceName })
+- **exportErrorLogs({ err, ship = true, log = true, self = false, timezone = 'Asia/Calcutta', scope = '@niccsj/elastic-logger', status = null, exporter = false, batchSize, brand_name, cs_env, microServiceName })**
   _Used to enable error logs shipping._  
-- errorHandler({ err, microServiceName, brand_name, cs_env, batchSize, timezone = 'Asia/Calcutta', scope = 'global', status = null })
+- **errorHandler({ err, microServiceName, brand_name, cs_env, batchSize, timezone = 'Asia/Calcutta', scope = 'global', status = null })**
   _A common error handler function._  
-- elasticError({ name, message, type = 'nodejs', status })
+- **elasticError({ name, message, type = 'nodejs', status })**
   _An extended Error class used within the package, can be used in code for custom errors._  
-- dynamicError({ name, message, metadata, type = 'nodejs', status })
+- **dynamicError({ name, message, metadata, type = 'nodejs', status })**
   _An even extended elasticError, can be used in code to add custom error fields to the error object._  
-- esClientObj _The elastic search client created within the library can be used within the code to add any custom functionality. Follows the standard elastic search API implementation_  
+- **esClientObj** _The elastic search client created within the library can be used within the code to add any custom functionality. Follows the standard elastic search API implementation_  
 
 ----
 
@@ -96,7 +96,7 @@ exportAccessLogs=true
 outGoingApiLogger=true
 
 elasticUrl='https://1.1.1.1:9200,https://2.2.2.2:9200'
-kibanaUrl='https://elk.oriserve.com/kibana'
+kibanaUrl='https://abc.xyz.com/kibana'
 
 ##elasticAuth
 elasticAuthType='api'
