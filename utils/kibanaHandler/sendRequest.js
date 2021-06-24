@@ -18,8 +18,8 @@ const sendRequest = async ({ apiEndpoint, method, queryParams = null, postData =
         options.headers['content-type'] = 'application/json';
         options.headers['kbn-xsrf'] = 'true';
         if (authType == 'basic') {
-            const { user, pass } = auth;
-            const credentials = `${user}:${pass}`;
+            const { username, password } = auth;
+            const credentials = `${username}:${password}`;
             options.headers['authorization'] = `Basic ${Buffer.from(credentials, 'binary').toString('base64')}`;
         } else {
             const { apiKey } = auth;
