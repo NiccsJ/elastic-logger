@@ -13,6 +13,7 @@
     "dependencies": {
         "@elastic/elasticsearch": "^7.10.0",
         "array.prototype.flatmap": "^1.2.4",
+        "axios": "^0.21.1",
         "dotenv": "^5.0.1",
         "json-stringify-safe": "^5.0.1",
         "moment-timezone": "^0.5.33"

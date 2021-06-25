@@ -3,13 +3,74 @@ let accessLoggerArgsValid = false; //needs to be validated only once
 let apiLoggerArgsValid = false; //needs to be validated only once
 let defaultLoggerDetails;
 let batchRequest = [];
+let cachedCloudMetadata;
 // let argCheckCount = 0;
+const axios = require('axios');
 const { bulkIndex } = require('./elasticHandler/elasticApi');
 const { errorHandler, elasticError } = require('./errorHandler');
-const { defaultInitializationValues, debug } = require('./constants');
+var {
+    defaultInitializationValues,
+    debug,
+    cloudType,
+    enableCloudMetadata,
+    AWS_METADATA_ENDPOINT_MAPPINGS,
+    AWS_METADATA_BASE_URL,
+    AWS_METADATA_ENDPOINT
+} = require('./constants');
 
-const getEc2Metadata = async () => {
+const isEC2 = async () => {
+    try {
+        let status = false;
+        const config = {};
+        config.timeout = 1000;
+        await axios.get(AWS_METADATA_BASE_URL, config)
+            .then(response => { status = true })
+            .catch(err => {
+                if (err.code === 'ECONNABORTED') { //timeout
+                    status = false;
+                } else {
+                    throw err;
+                }
+            });
+        return status;
+    } catch (err) {
+        errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.isEC2' });
+        return false;
+    }
+};
 
+const getCloudMetadata = async (cloudType) => {
+    try {
+        console.log('\ngetCloudMetadata invoked\n');
+        const cloudMetadataObj = {};
+        const config = {};
+        config.timeout = 1000;
+        switch (cloudType) {
+            case 'aws':
+                if (!await isEC2()) {
+                    cloudMetadataObj.type = 'not aws';
+                    cachedCloudMetadata = cloudMetadataObj;
+                    return cloudMetadataObj;
+                }
+                cloudMetadataObj.type = 'aws';
+                cloudMetadataObj.data = {};
+                for (let key in AWS_METADATA_ENDPOINT_MAPPINGS) {
+                    await axios.get(`${AWS_METADATA_ENDPOINT}${AWS_METADATA_ENDPOINT_MAPPINGS[key]}`, config)
+                        .then(response => { cloudMetadataObj.data[key] = response && response.data ? response.data : 'Unable to fetch ${key}' })
+                        .catch(err => { cloudMetadataObj.data[key] = `Error in fetching ${key}.` });
+                }
+                break;
+            default:
+                cloudMetadataObj.type = `Unrecognized cloud type: ${cloudType}.`;
+                // throw new elasticError({ name: `Unrecognized Cloud Type:`, message: `Supplied cloud type isn't supported: ${cloudType}. Allowed values are: 'aws'.`, type: 'elastic-logger', status: 998 });
+                break;
+        }
+        cachedCloudMetadata = cloudMetadataObj;
+        return cloudMetadataObj;
+    } catch (err) {
+        errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.getCloudMetadata' });
+        return cachedCloudMetadata; //caching in case of error as well. To avoid, repetitive calls to getCloudMetadata
+    }
 };
 
 const checkSuppliedArguments = async ({ err, esConnObj, microServiceName, brand_name, cs_env, batchSize, timezone, exporterType }, argCheckCount = 0) => {
@@ -19,7 +80,7 @@ const checkSuppliedArguments = async ({ err, esConnObj, microServiceName, brand_
         const suppliedArgs = { err, esConnObj, microServiceName, brand_name, cs_env, batchSize, timezone };
         let argsMissing = Object.values(suppliedArgs).some(o => !o);
 
-        if ( argCheckCount < 3 && argsMissing && exporterType != 'initializer') {
+        if (argCheckCount < 3 && argsMissing && exporterType != 'initializer') {
             if (!defaultLoggerDetails) defaultLoggerDetails = require('../utils/elasticHandler/initializeElasticLogger').esClientObj.defaultLoggerDetails;
             argCheckCount++;
             const newDefaultLogger = {};
@@ -50,7 +111,7 @@ const checkSuppliedArguments = async ({ err, esConnObj, microServiceName, brand_
             } else if (esConnObj && (esConnObj.authType == 'basic' || esConnObj.authType == 'api')) {
                 if (!esConnObj.auth) throw new elasticError({ name: 'Argument(s) validation error:', message: `Object 'esConnObj.auth' is required when 'esConnObj.authType' is not 'none'.`, type: 'elastic-logger', status: 998 });
                 if (esConnObj.authType == 'api' && !esConnObj.auth.apiKey) throw new elasticError({ name: 'Argument(s) validation error:', message: `Argument 'esConnObj.auth.apiKey' is required when 'esConnObj.authType' is 'api'.`, type: 'elastic-logger', status: 998 });
-                if (esConnObj.authType == 'basic' && !(esConnObj.auth.username && esConnObj.auth.password) ) throw new elasticError({ name: 'Argument(s) validation error:', message: `Arguments 'esConnObj.auth.username' and 'esConnObj.auth.password' are required when 'esConnObj.authType' is 'basic'.`, type: 'nodejs', status: 998 });
+                if (esConnObj.authType == 'basic' && !(esConnObj.auth.username && esConnObj.auth.password)) throw new elasticError({ name: 'Argument(s) validation error:', message: `Arguments 'esConnObj.auth.username' and 'esConnObj.auth.password' are required when 'esConnObj.authType' is 'basic'.`, type: 'nodejs', status: 998 });
                 argsValid = true;
             } else {
                 argsValid = true;
@@ -82,6 +143,9 @@ const shipDataToElasticsearh = async ({ log, esConnObj, microServiceName, brand_
                 console.log('hmmmmmmm.....default? How?', exporterType);
                 throw new elasticError({ name: 'Argument(s) validation error:', message: `Invalid exporterType specified: '${exporterType}'. Allowed values are: 'initializer', 'access', and 'api'.`, type: 'elastic-logger', status: 998 });
         };
+        //adding cloud-meta-data if enabled
+        if(enableCloudMetadata) log['cloud-meta-data'] = cachedCloudMetadata ? cachedCloudMetadata : await getCloudMetadata(cloudType);
+
         batchSize = batchSize ? batchSize : defaultLoggerDetails.batchSize;
         brand_name = brand_name ? brand_name : defaultLoggerDetails.brand_name;
         cs_env = cs_env ? cs_env : defaultLoggerDetails.cs_env;
@@ -99,5 +163,5 @@ const shipDataToElasticsearh = async ({ log, esConnObj, microServiceName, brand_
 
 module.exports = {
     checkSuppliedArguments,
-    shipDataToElasticsearh
+    shipDataToElasticsearh,
 };
