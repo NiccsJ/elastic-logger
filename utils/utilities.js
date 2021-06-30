@@ -15,14 +15,15 @@ var {
     enableCloudMetadata,
     AWS_METADATA_ENDPOINT_MAPPINGS,
     AWS_METADATA_BASE_URL,
-    AWS_METADATA_ENDPOINT
+    AWS_METADATA_ENDPOINT,
+    DEFAULT_AWS_METADATA_OBJECT
 } = require('./constants');
 
 const isEC2 = async () => {
     try {
         let status = false;
         const config = {};
-        config.timeout = 1000;
+        config.timeout = 500;
         await axios.get(AWS_METADATA_BASE_URL, config)
             .then(response => { status = true })
             .catch(err => {
@@ -34,14 +35,13 @@ const isEC2 = async () => {
             });
         return status;
     } catch (err) {
-        errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.isEC2' });
+        errorHandler({ err, self: true, ship: false, scope: '@niccsj/elastic-logger.isEC2' });
         return false;
     }
 };
 
 const getCloudMetadata = async (cloudType) => {
     try {
-        console.log('\ngetCloudMetadata invoked\n');
         const cloudMetadataObj = {};
         const config = {};
         config.timeout = 1000;
@@ -66,12 +66,16 @@ const getCloudMetadata = async (cloudType) => {
                 break;
         }
         cachedCloudMetadata = cloudMetadataObj;
+        if (debug) console.log('\n<><><><> DEBUG <><><><>\ngetCloudMetadata---: ', 'cachedCloudMetadata: ', cachedCloudMetadata, '\n');
         return cloudMetadataObj;
     } catch (err) {
-        errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.getCloudMetadata' });
+        errorHandler({ err, self: true, ship: false, scope: '@niccsj/elastic-logger.getCloudMetadata' });
+        cachedCloudMetadata = cloudMetadataObj;
         return cachedCloudMetadata; //caching in case of error as well. To avoid, repetitive calls to getCloudMetadata
     }
 };
+
+if (enableCloudMetadata) getCloudMetadata(cloudType);
 
 const checkSuppliedArguments = async ({ err, esConnObj, microServiceName, brand_name, cs_env, batchSize, timezone, exporterType }, argCheckCount = 0) => {
     try {
@@ -144,7 +148,7 @@ const shipDataToElasticsearh = async ({ log, esConnObj, microServiceName, brand_
                 throw new elasticError({ name: 'Argument(s) validation error:', message: `Invalid exporterType specified: '${exporterType}'. Allowed values are: 'initializer', 'access', and 'api'.`, type: 'elastic-logger', status: 998 });
         };
         //adding cloud-meta-data if enabled
-        if(enableCloudMetadata) log['cloud-meta-data'] = cachedCloudMetadata ? cachedCloudMetadata : await getCloudMetadata(cloudType);
+        if (enableCloudMetadata) log['cloud-meta-data'] = cachedCloudMetadata ? cachedCloudMetadata : DEFAULT_AWS_METADATA_OBJECT;
 
         batchSize = batchSize ? batchSize : defaultLoggerDetails.batchSize;
         brand_name = brand_name ? brand_name : defaultLoggerDetails.brand_name;

@@ -2,8 +2,11 @@
 Cloud Metadata Endpoint Configuration
 */
 const enableCloudMetadata = process.env.elasticCloudMetadata ? true : false;
-const cloudType = process.env.elasticCloudType ? process.env.elasticCloudType : 'aws';
+const cloudType = process.env.elasticCloudType ? process.env.elasticCloudType : 'none';
 
+/*
+AWS Metadata
+*/
 const AWS_METADATA_BASE_URL = 'http://169.254.169.254/latest/';
 const AWS_METADATA_ENDPOINT = AWS_METADATA_BASE_URL + 'meta-data/';
 
@@ -17,6 +20,18 @@ const AWS_METADATA_ENDPOINT_MAPPINGS = {
     'hostname': 'hostname', //returns hostname
 };
 
+const DEFAULT_AWS_METADATA_OBJECT = {
+    type: 'aws',
+    data: {
+        'instance-id': 'not-ready',
+        'public-ip': 'not-ready',
+        'private-ip': 'not-ready',
+        'instance-type': 'not-ready',
+        'az': 'not-ready',
+        'ami-id': 'not-ready',
+        'hostname': 'not-ready'
+    }
+};
 /*
 Default Values
 */
@@ -114,5 +129,6 @@ module.exports = {
     cloudType,
     AWS_METADATA_BASE_URL,
     AWS_METADATA_ENDPOINT,
-    AWS_METADATA_ENDPOINT_MAPPINGS
+    AWS_METADATA_ENDPOINT_MAPPINGS,
+    DEFAULT_AWS_METADATA_OBJECT
 };
