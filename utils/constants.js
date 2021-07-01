@@ -1,10 +1,37 @@
 /*
-Endpoint Configuration
+Cloud Metadata Endpoint Configuration
 */
-const BASE_URL = 'http://169.254.169.254/latest/';
-const METADATA_ENDPOINT = 'meta-data/';
+const enableCloudMetadata = process.env.elasticCloudMetadata ? true : false;
+const cloudType = process.env.elasticCloudType ? process.env.elasticCloudType : 'none';
 
+/*
+AWS Metadata
+*/
+const AWS_METADATA_BASE_URL = 'http://169.254.169.254/latest/';
+const AWS_METADATA_ENDPOINT = AWS_METADATA_BASE_URL + 'meta-data/';
 
+const AWS_METADATA_ENDPOINT_MAPPINGS = {
+    'instance-id': 'instance-id', //return instance-id
+    'public-ip': 'public-ipv4', //return public-ip
+    'private-ip': 'local-ipv4', //returns private-ip
+    'instance-type': 'instance-type', //return instance-type
+    'az': 'placement/availability-zone', //return the az
+    'ami-id': 'ami-id', //returns ami-id
+    'hostname': 'hostname', //returns hostname
+};
+
+const DEFAULT_AWS_METADATA_OBJECT = {
+    type: 'aws',
+    data: {
+        'instance-id': 'not-ready',
+        'public-ip': 'not-ready',
+        'private-ip': 'not-ready',
+        'instance-type': 'not-ready',
+        'az': 'not-ready',
+        'ami-id': 'not-ready',
+        'hostname': 'not-ready'
+    }
+};
 /*
 Default Values
 */
@@ -97,5 +124,11 @@ module.exports = {
     defaultKibanaValues,
     dynamicTemplateComponentTemplateSettings,
     metadataCompomentTempalteSettings,
-    debug
+    debug,
+    enableCloudMetadata,
+    cloudType,
+    AWS_METADATA_BASE_URL,
+    AWS_METADATA_ENDPOINT,
+    AWS_METADATA_ENDPOINT_MAPPINGS,
+    DEFAULT_AWS_METADATA_OBJECT
 };

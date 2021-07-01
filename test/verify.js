@@ -72,3 +72,22 @@
 //       }
 //     }
 //   }
+
+//
+// setTimeout(async () => {
+//     const log = {};
+//     console.log('\n\n\nenableCloudMetadata----->', enableCloudMetadata);
+//     console.log('cachedCloudMetadata----->', cachedCloudMetadata);
+//     if(enableCloudMetadata) log['cloud-meta-data'] = cachedCloudMetadata ? cachedCloudMetadata : await getCloudMetadata(cloudType);
+//     console.log('log after adding meta----------->', log);
+//     console.log('\n\n\n');
+// }, 2000);
+
+// setTimeout(async () => {
+//     const log = {};
+//     console.log('\n\n\nenableCloudMetadata----->', enableCloudMetadata);
+//     console.log('cachedCloudMetadata----->', cachedCloudMetadata);
+//     if(enableCloudMetadata) log['cloud-meta-data'] = cachedCloudMetadata ? cachedCloudMetadata : await getCloudMetadata(cloudType);
+//     console.log('log after adding meta----------->', log);
+//     console.log('\n\n\n');
+// }, 5000);
