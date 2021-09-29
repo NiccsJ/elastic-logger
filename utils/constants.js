@@ -82,6 +82,8 @@ const defaultIlmPolicyValues = {
 };
 
 const defaultSocketEventsToListen = ['connect', 'connection', 'disconnect', 'error', 'connect_error', 'reconnecting', 'connect_timeout', 'reconnect_failed', 'reconnect_error'];
+// const defaultSocketEventsToListen = ['disconnect'];
+
 
 const metadataCompomentTempalteSettings = {
     metadataMappings: {
