@@ -81,6 +81,8 @@ const defaultIlmPolicyValues = {
     overwriteILM: false
 };
 
+const defaultSocketEventsToListen = ['connect', 'connection', 'disconnect', 'error', 'connect_error', 'reconnecting', 'connect_timeout', 'reconnect_failed', 'reconnect_error'];
+
 const metadataCompomentTempalteSettings = {
     metadataMappings: {
         properties: {
@@ -130,5 +132,6 @@ module.exports = {
     AWS_METADATA_BASE_URL,
     AWS_METADATA_ENDPOINT,
     AWS_METADATA_ENDPOINT_MAPPINGS,
-    DEFAULT_AWS_METADATA_OBJECT
+    DEFAULT_AWS_METADATA_OBJECT,
+    defaultSocketEventsToListen
 };

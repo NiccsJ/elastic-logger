@@ -1,7 +1,7 @@
 const momentTimezone = require('moment-timezone');
 const { shipDataToElasticsearh } = require('../utils/utilities');
 const { errorHandler, elasticError } = require('../utils/errorHandler');
-const { defaultInitializationValues, debug } = require('../utils/constants');
+const { defaultInitializationValues, defaultSocketEventsToListen, debug } = require('../utils/constants');
 
 
 const adapterLogBody = (client) => {
@@ -120,6 +120,7 @@ const exportAccessLogs = ({ microServiceName, brand_name, cs_env, batchSize, tim
 /**
  * Initiates the `incoming socket access` logger
  * @param {object} [a = This Defaults to values from `initialisation` object if specified else from `constants.js`] - an Object that has 5 properties.
+ * @param {string} [a.namespace] - (Required) List of socket.io namespace objects.
  * @param {string=} [a.microServiceName] - (Optional) Name of microService. Defaults to values from initialisation object if specified else constants.js
  * @param {string=} [a.brand_name] - (Optional) Name of brand. Defaults to values from initialisation object if specified else constants.js
  * @param {string=} [a.cs_env] - (Optional) The environment name. Defaults to values from initialisation object if specified else constants.js
@@ -128,38 +129,9 @@ const exportAccessLogs = ({ microServiceName, brand_name, cs_env, batchSize, tim
  *
  */
 
-// const exportSocketAccessLogs_v1 = ({ microServiceName, namespaces = [], brand_name, cs_env, batchSize, timezone = 'Asia/Calcutta', ship = false, logEvents = true, eventsToLog = ['disconnect'] }) => {
-//     return (socket, next) => {
-//         try {
-//             const date = momentTimezone().tz(timezone).startOf('day').format('YYYY-MM-DD');
-//             const dateTime = momentTimezone().tz(timezone).format();
-//             const log = morphAccessLogs({ type: 'socket-access', socket, date, dateTime, microServiceName });
-
-//             if (debug) console.log('\n<><><><><><><><><><><><><><><><> DEBUG <><><><><><><><><><><><><><><><>\nSocketLog: ', log, '\n');
-//             console.log('\n\n <><><><><><><> EXPORT SOCKET ACCESS LOGS START <><><><><><><><><><><><> \n\n');
-
-//             if (logEvents && namespaces.length > 0 /*&& !socketListenerActive*/) {
-//                 namespaces.forEach(nsp => {
-//                     nsp.on('connection', async (socket) => {
-//                         console.log(`\n <><><><><><><> INITIAL CONNECTION EVENT, SOCKET ID: ${socket.id} <><><><><><><><><><><><> \n`);
-//                         setupSocketListerners({ socket, eventsToLog, microServiceName, timezone });
-//                     });
-//                 });
-//             }
-
-//             console.log('\n\n <><><><><><><> SHIPPING SOCKET LOG <><><><><><><><><><><><> \n\n ');
-//             // if (ship) shipDataToElasticsearh({ log, microServiceName, brand_name, cs_env, batchSize, timezone, exporterType: 'access' });
-
-//             next();
-//         } catch (err) {
-//             errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.exportSocketAccessLogs' });
-//             return (socket, next) => { next() };
-//         }
-//     };
-// };
-
-const exportSocketAccessLogs = async ({ microServiceName, namespaces = [], brand_name, cs_env, batchSize, timezone = 'Asia/Calcutta', ship = false, eventsToLog = ['disconnect'] }) => {
+const exportSocketAccessLogs = async ({ microServiceName, namespaces = [], brand_name, cs_env, batchSize, timezone = 'Asia/Calcutta', ship = false, eventsToLog = [] }) => {
     try {
+        eventsToLog.unshift(...defaultSocketEventsToListen);
         if (!(namespaces.length > 0)) throw new elasticError({ name: 'Initialization failed:', message: `exportSocketAccessLogs: 'namespaces' argument missing`, type: 'elastic-logger', status: 999 });
         namespaces.forEach(async nsp => {
             nsp.on('connection', async socket => {
@@ -205,6 +177,37 @@ const setupSocketListeners = async ({ socket, eventsToLog = ['disconnect'], micr
         errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.setupSocketListerners' });
     }
 };
+
+// const exportSocketAccessLogs_v1 = ({ microServiceName, namespaces = [], brand_name, cs_env, batchSize, timezone = 'Asia/Calcutta', ship = false, logEvents = true, eventsToLog = ['disconnect'] }) => {
+//     return (socket, next) => {
+//         try {
+//             const date = momentTimezone().tz(timezone).startOf('day').format('YYYY-MM-DD');
+//             const dateTime = momentTimezone().tz(timezone).format();
+//             const log = morphAccessLogs({ type: 'socket-access', socket, date, dateTime, microServiceName });
+
+//             if (debug) console.log('\n<><><><><><><><><><><><><><><><> DEBUG <><><><><><><><><><><><><><><><>\nSocketLog: ', log, '\n');
+//             console.log('\n\n <><><><><><><> EXPORT SOCKET ACCESS LOGS START <><><><><><><><><><><><> \n\n');
+
+//             if (logEvents && namespaces.length > 0 /*&& !socketListenerActive*/) {
+//                 namespaces.forEach(nsp => {
+//                     nsp.on('connection', async (socket) => {
+//                         console.log(`\n <><><><><><><> INITIAL CONNECTION EVENT, SOCKET ID: ${socket.id} <><><><><><><><><><><><> \n`);
+//                         setupSocketListeners({ socket, eventsToLog, microServiceName, timezone });
+//                     });
+//                 });
+//             }
+
+//             console.log('\n\n <><><><><><><> SHIPPING SOCKET LOG <><><><><><><><><><><><> \n\n ');
+//             // if (ship) shipDataToElasticsearh({ log, microServiceName, brand_name, cs_env, batchSize, timezone, exporterType: 'access' });
+
+//             next();
+//         } catch (err) {
+//             errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.exportSocketAccessLogs' });
+//             return (socket, next) => { next() };
+//         }
+//     };
+// };
+
 
 module.exports = {
     exportAccessLogs, exportSocketAccessLogs
