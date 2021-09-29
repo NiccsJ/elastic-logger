@@ -1,4 +1,4 @@
-let shipDataToElasticsearh;
+let shipDataToElasticsearch;
 const safeStringify = require('json-stringify-safe');
 const { defaultInitializationValues } = require('./constants');
 const momentTimezone = require('moment-timezone');
@@ -135,8 +135,8 @@ const errorHandler = async ({ err, ship = false, log = true, self = false, timez
         if (log) console.error('\n' + safeStringify(morphedError) + '\n');
         if (self) return; //return after one error from self
         if (ship) {
-            if (!shipDataToElasticsearh) shipDataToElasticsearh = require('./utilities').shipDataToElasticsearh;
-            shipDataToElasticsearh({ log: morphedError.data, microServiceName, brand_name, cs_env, batchSize, timezone, exporterType: 'error' });
+            if (!shipDataToElasticsearch) shipDataToElasticsearch = require('./utilities').shipDataToElasticsearch;
+            shipDataToElasticsearch({ log: morphedError.data, microServiceName, brand_name, cs_env, batchSize, timezone, exporterType: 'error' });
         }
     } catch (err) {
         errorHandler({ err, ship: false, self: true, scope: '@niccsj/elastic-logger.errorHandler' });

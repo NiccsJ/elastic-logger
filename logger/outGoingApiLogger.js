@@ -1,7 +1,7 @@
 let url;
 const momentTimezone = require('moment-timezone');
 const { errorHandler, elasticError } = require('../utils/errorHandler');
-const { shipDataToElasticsearh } = require('../utils/utilities');
+const { shipDataToElasticsearch } = require('../utils/utilities');
 const { debug } = require('../utils/constants');
 
 const overwriteHttpProtocol = async ({ microServiceName, brand_name, cs_env, batchSize, timezone = 'Asia/Calcutta', elasticUrl = process.env.elasticUrl, kibanaUrl = process.env.kibanaUrl }) => {
@@ -85,7 +85,7 @@ const outBoundApiLogger = async ({ href, requestStart, statusCode, microServiceN
             logDate: date,
             "@timestamp": dateTime,
         };
-        shipDataToElasticsearh({ log, microServiceName, brand_name, cs_env, batchSize, timezone, exporterType: 'api' });
+        shipDataToElasticsearch({ log, microServiceName, brand_name, cs_env, batchSize, timezone, exporterType: 'api' });
 
     } catch (err) {
         errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.outBoundApiLogger' });

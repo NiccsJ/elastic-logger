@@ -129,7 +129,7 @@ const checkSuppliedArguments = async ({ err, esConnObj, microServiceName, brand_
     }
 };
 
-const shipDataToElasticsearh = async ({ log, esConnObj, microServiceName, brand_name, cs_env, batchSize, timezone, exporterType }) => {
+const shipDataToElasticsearch = async ({ log, esConnObj, microServiceName, brand_name, cs_env, batchSize, timezone, exporterType }) => {
     try {
         let errorLoggerArgsValid = false; //to be validated on evey call
 
@@ -161,11 +161,11 @@ const shipDataToElasticsearh = async ({ log, esConnObj, microServiceName, brand_
             batchRequest = [];
         }
     } catch (err) {
-        errorHandler({ err, ship: false, self: true, scope: '@niccsj/elastic-logger.shipDataToElasticsearh' });
+        errorHandler({ err, ship: false, self: true, scope: '@niccsj/elastic-logger.shipDataToElasticsearch' });
     }
 };
 
 module.exports = {
     checkSuppliedArguments,
-    shipDataToElasticsearh,
+    shipDataToElasticsearch,
 };

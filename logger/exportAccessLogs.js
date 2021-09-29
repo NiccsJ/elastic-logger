@@ -1,5 +1,5 @@
 const momentTimezone = require('moment-timezone');
-const { shipDataToElasticsearh } = require('../utils/utilities');
+const { shipDataToElasticsearch } = require('../utils/utilities');
 const { errorHandler, elasticError } = require('../utils/errorHandler');
 const { defaultInitializationValues, defaultSocketEventsToListen, debug } = require('../utils/constants');
 
@@ -100,7 +100,7 @@ const exportAccessLogs = ({ microServiceName, brand_name, cs_env, batchSize, tim
                     const log = morphAccessLogs({ type: 'http-access', req, res, date, dateTime, requestStart, microServiceName });
 
                     // if (debug) console.log('\n<><><><><><><><><><><><><><><><> DEBUG <><><><><><><><><><><><><><><><>\nAccessLog: ', log, '\n');
-                    if (ship) shipDataToElasticsearh({ log, microServiceName, brand_name, cs_env, batchSize, timezone, exporterType: 'access' });
+                    if (ship) shipDataToElasticsearch({ log, microServiceName, brand_name, cs_env, batchSize, timezone, exporterType: 'access' });
 
                 } catch (err) {
                     errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.exportAccessLogs.res.on' });
@@ -129,20 +129,20 @@ const exportAccessLogs = ({ microServiceName, brand_name, cs_env, batchSize, tim
  *
  */
 
-const exportSocketAccessLogs = async ({ microServiceName, namespaces = [], brand_name, cs_env, batchSize, timezone = 'Asia/Calcutta', ship = false, eventsToLog = [] }) => {
+const exportSocketAccessLogs = async ({ microServiceName, brand_name, cs_env, batchSize, timezone = 'Asia/Calcutta', ship = false, namespaces = [], eventsToLog = [] }) => {
     try {
         eventsToLog.unshift(...defaultSocketEventsToListen);
         if (!(namespaces.length > 0)) throw new elasticError({ name: 'Initialization failed:', message: `exportSocketAccessLogs: 'namespaces' argument missing`, type: 'elastic-logger', status: 999 });
         namespaces.forEach(async nsp => {
             nsp.on('connection', async socket => {
-                console.log(`\n <><><><><><><> INITIAL CONNECTION EVENT, SOCKET ID: ${socket.id} <><><><><><><><><><><><> \n`);
-                setupSocketListeners({ socket, eventsToLog, microServiceName, timezone });
+                if (debug) console.log(`\n <><><><><><><> INITIAL CONNECTION EVENT, SOCKET ID: ${socket.id} <><><><><><><><><><><><> \n`);
+                setupSocketListeners({ microServiceName, brand_name, cs_env, batchSize, timezone, ship, eventsToLog, socket });
                 const date = momentTimezone().tz(timezone).startOf('day').format('YYYY-MM-DD');
                 const dateTime = momentTimezone().tz(timezone).format();
                 const log = morphAccessLogs({ type: 'socket-access', socket, date, dateTime, microServiceName });
                 // if (debug) console.log('\n<><><><><><><><><><><><><><><><> DEBUG <><><><><><><><><><><><><><><><>\nSocketLog: ', log, '\n');
                 if (debug) console.log('\n\n <><><><><><><> SHIPPING SOCKET LOG <><><><><><><><><><><><> \n\n ');
-                // if (ship) shipDataToElasticsearh({ log, microServiceName, brand_name, cs_env, batchSize, timezone, exporterType: 'access' });
+                if (ship) shipDataToElasticsearch({ log, microServiceName, brand_name, cs_env, batchSize, timezone, exporterType: 'access' });
             });
         });
     } catch (err) {
@@ -150,20 +150,20 @@ const exportSocketAccessLogs = async ({ microServiceName, namespaces = [], brand
     }
 };
 
-const setupSocketListeners = async ({ socket, eventsToLog = ['disconnect'], microServiceName, timezone }) => {
+const setupSocketListeners = async ({ microServiceName, brand_name, cs_env, batchSize, timezone, ship, eventsToLog, socket }) => {
     try {
-        console.log('\n\n <><><><><><><> EXPORT SOCKET EVENTS LOGS START <><><><><><><><><><><><> \n\n');
+        if (debug) console.log('\n\n <><><><><><><> EXPORT SOCKET EVENTS LOGS START <><><><><><><><><><><><> \n\n');
         eventsToLog.forEach(async event => {
-            console.log('\n<><><><><><><> ONLY PRINT ONCE PER EVENT PER SOCKET <><><><><><><><><><><><> \n');
+            if (debug) console.log('\n<><><><><><><> ONLY PRINT ONCE PER EVENT PER SOCKET <><><><><><><><><><><><> \n');
             socket.on(event, async (data, callback) => {
-                console.log(`\n <><><><><><><> SOCKET EVENT RECEIVED, SOCKET ID: ${socket.id}, EVENT: ${event}, ARGS: ${data} <><><><><><><><><><><><> \n`);
-                // console.log('\n<><><><><><><><><><><><><><><><> DEBUG <><><><><><><><><><><><><><><><>\nSocket event received: ', event, 'for Socket ID: ', socket.id, '\n', 'with arguments: ', data, '\n');
+                if (debug) console.log(`\n <><><><><><><> SOCKET EVENT RECEIVED, SOCKET ID: ${socket.id}, EVENT: ${event}, ARGS: ${data} <><><><><><><><><><><><> \n`);
+                // if (debug) console.log('\n<><><><><><><><><><><><><><><><> DEBUG <><><><><><><><><><><><><><><><>\nSocket event received: ', event, 'for Socket ID: ', socket.id, '\n', 'with arguments: ', data, '\n');
                 const date = momentTimezone().tz(timezone).startOf('day').format('YYYY-MM-DD');
                 const dateTime = momentTimezone().tz(timezone).format();
                 const log = morphAccessLogs({ type: 'socket-access', socket, event, data, date, dateTime, microServiceName });
                 // if (debug) console.log('\n<><><><><><><><><><><><><><><><> DEBUG <><><><><><><><><><><><><><><><>\nSocketLogWithEvent: ', log, '\n');
                 if (debug) console.log('\n\n <><><><><><><> SHIPPING SOCKET EVENT LOG <><><><><><><><><><><><> \n\n ');
-                // if (ship) shipDataToElasticsearh({ log, microServiceName, brand_name, cs_env, batchSize, timezone, exporterType: 'access' });
+                if (ship) shipDataToElasticsearch({ log, microServiceName, brand_name, cs_env, batchSize, timezone, exporterType: 'access' });
             });
         });
         console.log('\n\n <><><><><><><> EXPORT SOCKET EVENTS LOGS END <><><><><><><><><><><><> \n\n');
@@ -174,7 +174,7 @@ const setupSocketListeners = async ({ socket, eventsToLog = ['disconnect'], micr
         //     });
         // }
     } catch (err) {
-        errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.setupSocketListerners' });
+        errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.setupSocketListeners' });
     }
 };
 
@@ -198,7 +198,7 @@ const setupSocketListeners = async ({ socket, eventsToLog = ['disconnect'], micr
 //             }
 
 //             console.log('\n\n <><><><><><><> SHIPPING SOCKET LOG <><><><><><><><><><><><> \n\n ');
-//             // if (ship) shipDataToElasticsearh({ log, microServiceName, brand_name, cs_env, batchSize, timezone, exporterType: 'access' });
+//             // if (ship) shipDataToElasticsearch({ log, microServiceName, brand_name, cs_env, batchSize, timezone, exporterType: 'access' });
 
 //             next();
 //         } catch (err) {
