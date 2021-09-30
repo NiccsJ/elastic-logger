@@ -28,12 +28,16 @@ const overwriteHttpProtocol = async ({ microServiceName, brand_name, cs_env, bat
                                 const ips = ipPorts.map(ipPort => { return ipPort.split(":")[0] });
                                 const hostname = (options && options.href) ? options.href : (options && options.hostname) ? options.hostname : null;
                                 if (hostname && !ips.includes(hostname)) {
-                                    res.on('data', (data) => {
-                                        if (Buffer.isBuffer(data)) {
-                                            responseSize += data.length;
-                                            if (debug) console.log(`\n<><><><><><> DEBUG <><><><><><>\nBuffer Size: ${data.length}\n`);
-                                        }
-                                    });
+                                    if (res.headers && res.headers['content-length']) {
+                                        responseSize = Number(res.headers['content-length']);
+                                    } else {
+                                        res.on('data', (data) => {
+                                            if (Buffer.isBuffer(data)) {
+                                                responseSize += data.length;
+                                                console.log(`\n<><><><><><> DEBUG <><><><><><>\nBuffer Size: ${data.length}\n`);
+                                            }
+                                        });
+                                    }
                                     res.on('close', () => {
                                         if (debug) console.log('\n<><><><> DEBUG <><><><>\nRequest Hostname: ', hostname, '\nElastic-Kibana IPs/URLs: ', ips, '\n');
                                         requestLogObject.href = options.href ? options.href : options.hostname + options.path;
