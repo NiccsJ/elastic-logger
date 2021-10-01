@@ -42,6 +42,7 @@ const overwriteHttpProtocol = async ({ microServiceName, brand_name, cs_env, bat
                                     res.on('close', () => {
                                         requestLogObject.href = options.href ? options.href : options.hostname + options.path;
                                         requestLogObject.headers = options.headers ? options.headers : {};
+                                        requestLogObject.method = options.method ? options.method : '';
                                         requestLogObject.requestStart = requestStart;
 
                                         responseLogObject.statusCode = res.statusCode;
@@ -79,7 +80,7 @@ const overwriteHttpProtocol = async ({ microServiceName, brand_name, cs_env, bat
 
 const outBoundApiLogger = async ({ requestLogObject, responseLogObject, microServiceName, brand_name, cs_env, batchSize, timezone }) => {
     try {
-        let { href, headers, requestStart } = requestLogObject;
+        let { href, headers, method, requestStart } = requestLogObject;
         const { statusCode, responseSize } = responseLogObject;
         const processingTime = Date.now() - requestStart;
         const NUMERIC_REGEXP = /[4-9]{1}[0-9]{9}/g;
@@ -102,6 +103,7 @@ const outBoundApiLogger = async ({ requestLogObject, responseLogObject, microSer
         const dateTime = momentTimezone().tz(timezone).format();
         const log = {
             url: href,
+            method,
             processingTime,
             headers,
             statusCode,
