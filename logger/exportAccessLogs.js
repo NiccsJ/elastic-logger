@@ -96,12 +96,9 @@ const exportAccessLogs = ({ microServiceName, brand_name, cs_env, batchSize, tim
                 try {
                     const date = momentTimezone().tz(timezone).startOf('day').format('YYYY-MM-DD');
                     const dateTime = momentTimezone().tz(timezone).format();
-
                     const log = morphAccessLogs({ type: 'http-access', req, res, date, dateTime, requestStart, microServiceName });
-
                     // if (debug) console.log('\n<><><><><><><><><><><><><><><><> DEBUG <><><><><><><><><><><><><><><><>\nAccessLog: ', log, '\n');
                     if (ship) shipDataToElasticsearch({ log, microServiceName, brand_name, cs_env, batchSize, timezone, exporterType: 'access' });
-
                 } catch (err) {
                     errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.exportAccessLogs.res.on' });
                     return (req, res, next) => {
@@ -153,10 +150,8 @@ const exportSocketAccessLogs = async ({ microServiceName, brand_name, cs_env, ba
 const setupSocketListeners = async ({ microServiceName, brand_name, cs_env, batchSize, timezone, ship, eventsToLog, socket }) => {
     try {
         eventsToLog.forEach(async event => {
-            if (debug) console.log('\n<><><><><><><> ONLY PRINT ONCE PER EVENT PER SOCKET <><><><><><><><><><><><> \n');
             socket.on(event, async (data, callback) => {
                 if (debug) console.log(`\n <><><><><><><> SOCKET EVENT RECEIVED, SOCKET ID: ${socket.id}, EVENT: ${event}, ARGS: ${data} <><><><><><><><><><><><> \n`);
-                // if (debug) console.log('\n<><><><><><><><><><><><><><><><> DEBUG <><><><><><><><><><><><><><><><>\nSocket event received: ', event, 'for Socket ID: ', socket.id, '\n', 'with arguments: ', data, '\n');
                 const date = momentTimezone().tz(timezone).startOf('day').format('YYYY-MM-DD');
                 const dateTime = momentTimezone().tz(timezone).format();
                 const log = morphAccessLogs({ type: 'socket-access', socket, event, data, date, dateTime, microServiceName });
@@ -174,37 +169,6 @@ const setupSocketListeners = async ({ microServiceName, brand_name, cs_env, batc
         errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.setupSocketListeners' });
     }
 };
-
-// const exportSocketAccessLogs_v1 = ({ microServiceName, namespaces = [], brand_name, cs_env, batchSize, timezone = 'Asia/Calcutta', ship = false, logEvents = true, eventsToLog = ['disconnect'] }) => {
-//     return (socket, next) => {
-//         try {
-//             const date = momentTimezone().tz(timezone).startOf('day').format('YYYY-MM-DD');
-//             const dateTime = momentTimezone().tz(timezone).format();
-//             const log = morphAccessLogs({ type: 'socket-access', socket, date, dateTime, microServiceName });
-
-//             if (debug) console.log('\n<><><><><><><><><><><><><><><><> DEBUG <><><><><><><><><><><><><><><><>\nSocketLog: ', log, '\n');
-//             console.log('\n\n <><><><><><><> EXPORT SOCKET ACCESS LOGS START <><><><><><><><><><><><> \n\n');
-
-//             if (logEvents && namespaces.length > 0 /*&& !socketListenerActive*/) {
-//                 namespaces.forEach(nsp => {
-//                     nsp.on('connection', async (socket) => {
-//                         console.log(`\n <><><><><><><> INITIAL CONNECTION EVENT, SOCKET ID: ${socket.id} <><><><><><><><><><><><> \n`);
-//                         setupSocketListeners({ socket, eventsToLog, microServiceName, timezone });
-//                     });
-//                 });
-//             }
-
-//             console.log('\n\n <><><><><><><> SHIPPING SOCKET LOG <><><><><><><><><><><><> \n\n ');
-//             // if (ship) shipDataToElasticsearch({ log, microServiceName, brand_name, cs_env, batchSize, timezone, exporterType: 'access' });
-
-//             next();
-//         } catch (err) {
-//             errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.exportSocketAccessLogs' });
-//             return (socket, next) => { next() };
-//         }
-//     };
-// };
-
 
 module.exports = {
     exportAccessLogs, exportSocketAccessLogs
