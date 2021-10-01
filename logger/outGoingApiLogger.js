@@ -28,25 +28,25 @@ const overwriteHttpProtocol = async ({ microServiceName, brand_name, cs_env, bat
                                 const ips = ipPorts.map(ipPort => { return ipPort.split(":")[0] });
                                 const hostname = (options && options.href) ? options.href : (options && options.hostname) ? options.hostname : null;
                                 if (hostname && !ips.includes(hostname)) {
+                                    if (debug) console.log('\n<><><><> DEBUG <><><><>\nRequest Hostname: ', hostname, '\nElastic-Kibana IPs/URLs: ', ips, '\n');
                                     if (res.headers && res.headers['content-length']) {
                                         responseSize = Number(res.headers['content-length']);
                                     } else {
                                         res.on('data', (data) => {
-                                            if (Buffer.isBuffer(data)) {
+                                            if (data && Buffer.isBuffer(data)) {
                                                 responseSize += data.length;
-                                                console.log(`\n<><><><><><> DEBUG <><><><><><>\nBuffer Size: ${data.length}\n`);
+                                                delete data;
                                             }
                                         });
                                     }
                                     res.on('close', () => {
-                                        if (debug) console.log('\n<><><><> DEBUG <><><><>\nRequest Hostname: ', hostname, '\nElastic-Kibana IPs/URLs: ', ips, '\n');
                                         requestLogObject.href = options.href ? options.href : options.hostname + options.path;
                                         requestLogObject.headers = options.headers ? options.headers : {};
                                         requestLogObject.requestStart = requestStart;
 
                                         responseLogObject.statusCode = res.statusCode;
                                         responseLogObject.headers = res.headers;
-                                        responseLogObject.responseSize = res.headers && res.headers['content-length'] ? Number(res.headers['content-length']) : responseSize;
+                                        responseLogObject.responseSize = responseSize;
                                         //skip when headers contain transfer-encoding: 'chunked'
                                         outBoundApiLogger({ requestLogObject, responseLogObject, microServiceName, brand_name, cs_env, batchSize, timezone });
                                     });
@@ -77,7 +77,7 @@ const overwriteHttpProtocol = async ({ microServiceName, brand_name, cs_env, bat
     }
 };
 
-const outBoundApiLogger = async ({ requestLogObject, responseLogObject, microServiceName, brand_name, cs_env, batchSize, timezone, }) => {
+const outBoundApiLogger = async ({ requestLogObject, responseLogObject, microServiceName, brand_name, cs_env, batchSize, timezone }) => {
     try {
         let { href, headers, requestStart } = requestLogObject;
         const { statusCode, responseSize } = responseLogObject;
@@ -112,6 +112,7 @@ const outBoundApiLogger = async ({ requestLogObject, responseLogObject, microSer
             logDate: date,
             "@timestamp": dateTime,
         };
+
         if (debug) console.log('\n<><><><> DEBUG <><><><>\nOutgoingLog: ', log, '\n');
         shipDataToElasticsearh({ log, microServiceName, brand_name, cs_env, batchSize, timezone, exporterType: 'api' });
     } catch (err) {
