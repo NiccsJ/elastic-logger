@@ -120,12 +120,13 @@ const exportAccessLogs = ({ microServiceName, brand_name, cs_env, batchSize, tim
 /**
  * Initiates the `incoming socket access` logger
  * @param {object} [a = This Defaults to values from `initialisation` object if specified else from `constants.js`] - an Object that has 5 properties.
- * @param {string} [a.namespace] - (Required) List of socket.io namespace objects.
+ * @param {array} [a.namespaces] - (Required) List of socket.io namespace objects.
  * @param {string=} [a.microServiceName] - (Optional) Name of microService. Defaults to values from initialisation object if specified else constants.js
  * @param {string=} [a.brand_name] - (Optional) Name of brand. Defaults to values from initialisation object if specified else constants.js
  * @param {string=} [a.cs_env] - (Optional) The environment name. Defaults to values from initialisation object if specified else constants.js
  * @param {number=} [a.batchSize] - (Optional) Size of batch. Defaults to values from initialisation object if specified else constants.js
  * @param {string=} [a.timezone] - (Optional) Timezone to be used by moment. Defaults to values from initialisation object if specified else constants.js
+ * @param {array} [a.eventsToLog] - (Optional) List of custom socket events to listen to.
  *
  */
 
