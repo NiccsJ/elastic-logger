@@ -855,7 +855,7 @@
 											}
 										],
 										"url": {
-											"raw": "https://elk.oriserve.com/kibana/api/saved_objects/_find?search_fields=title&per_page=10&type=dashboard&search=[RAW]",
+											"raw": "https://elk.oriserve.com/kibana/api/saved_objects/_find?search_fields=title&per_page=10&type=search&search=[Deep Insights]vodafone_prod_socket_logs",
 											"protocol": "https",
 											"host": [
 												"elk",
@@ -884,11 +884,11 @@
 												},
 												{
 													"key": "type",
-													"value": "dashboard"
+													"value": "search"
 												},
 												{
 													"key": "search",
-													"value": "[RAW]"
+													"value": "[Deep Insights]vodafone_prod_socket_logs"
 												}
 											]
 										}
@@ -1274,6 +1274,62 @@
 										"saved_objects",
 										"search",
 										"deep_insights_{{brand_name}}_{{env}}_access_logs_search"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "create_deep_insight_socket_log_search",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"if (pm.response.code === 200) {",
+											"    pm.collectionVariables.set('deep_insights_socket_logs_search_id', pm.response.json().id);",
+											"} else {",
+											"    console.error('Status: ', pm.response.code, '\\nBody: ', pm.response.status, '\\n');",
+											"    throw new Error('Socket log search creation failed!');",
+											"}",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "kbn-xsrf",
+										"value": "true",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"attributes\": {\n        \"title\": \"[Deep Insights] {{brand_name}}_{{env}}_socket_logs\",\n        \"description\": \"Saved search created by automation .via postman\",\n        \"hits\": 0,\n        \"columns\": [\n            \"id\",\n            \"handshake.query.psid\",\n            \"headers.host\",\n            \"headers.origin\",\n            \"handshake.query.role\",\n            \"events.event\",\n            \"events.arguments.data\"\n        ],\n        \"sort\": [],\n        \"version\": 1,\n        \"kibanaSavedObjectMeta\": {\n            \"searchSourceJSON\": \"{\\\"highlightAll\\\":true,\\\"version\\\":true,\\\"query\\\":{\\\"query\\\":\\\"\\\",\\\"language\\\":\\\"kuery\\\"},\\\"filter\\\":[{\\\"$state\\\":{\\\"store\\\":\\\"appState\\\"},\\\"meta\\\":{\\\"alias\\\":\\\"accessLogs\\\",\\\"disabled\\\":true,\\\"key\\\":\\\"logType.keyword\\\",\\\"negate\\\":false,\\\"params\\\":{\\\"query\\\":\\\"accessLogs\\\"},\\\"type\\\":\\\"phrase\\\",\\\"indexRefName\\\":\\\"kibanaSavedObjectMeta.searchSourceJSON.filter[0].meta.index\\\"},\\\"query\\\":{\\\"match_phrase\\\":{\\\"logType.keyword\\\":\\\"accessLogs\\\"}}},{\\\"$state\\\":{\\\"store\\\":\\\"appState\\\"},\\\"meta\\\":{\\\"alias\\\":\\\"apiLogs\\\",\\\"disabled\\\":true,\\\"key\\\":\\\"logType.keyword\\\",\\\"negate\\\":false,\\\"params\\\":{\\\"query\\\":\\\"apiLogs\\\"},\\\"type\\\":\\\"phrase\\\",\\\"indexRefName\\\":\\\"kibanaSavedObjectMeta.searchSourceJSON.filter[1].meta.index\\\"},\\\"query\\\":{\\\"match_phrase\\\":{\\\"logType.keyword\\\":\\\"apiLogs\\\"}}},{\\\"$state\\\":{\\\"store\\\":\\\"appState\\\"},\\\"meta\\\":{\\\"alias\\\":\\\"socketLogs\\\",\\\"disabled\\\":false,\\\"key\\\":\\\"logType.keyword\\\",\\\"negate\\\":false,\\\"params\\\":{\\\"query\\\":\\\"socketLogs\\\"},\\\"type\\\":\\\"phrase\\\",\\\"indexRefName\\\":\\\"kibanaSavedObjectMeta.searchSourceJSON.filter[2].meta.index\\\"},\\\"query\\\":{\\\"match_phrase\\\":{\\\"logType.keyword\\\":\\\"socketLogs\\\"}}},{\\\"$state\\\":{\\\"store\\\":\\\"appState\\\"},\\\"meta\\\":{\\\"alias\\\":\\\"errorLogs\\\",\\\"disabled\\\":true,\\\"key\\\":\\\"logType.keyword\\\",\\\"negate\\\":false,\\\"params\\\":{\\\"query\\\":\\\"errorLogs\\\"},\\\"type\\\":\\\"phrase\\\",\\\"indexRefName\\\":\\\"kibanaSavedObjectMeta.searchSourceJSON.filter[3].meta.index\\\"},\\\"query\\\":{\\\"match_phrase\\\":{\\\"logType.keyword\\\":\\\"errorLogs\\\"}}}],\\\"indexRefName\\\":\\\"kibanaSavedObjectMeta.searchSourceJSON.index\\\"}\"\n        }\n    },\n    \"references\": [\n        {\n            \"name\": \"kibanaSavedObjectMeta.searchSourceJSON.index\",\n            \"type\": \"index-pattern\",\n            \"id\": \"{{index_pattern}}\"\n        },\n        {\n            \"name\": \"kibanaSavedObjectMeta.searchSourceJSON.filter[0].meta.index\",\n            \"type\": \"index-pattern\",\n            \"id\": \"{{index_pattern}}\"\n        },\n        {\n            \"name\": \"kibanaSavedObjectMeta.searchSourceJSON.filter[1].meta.index\",\n            \"type\": \"index-pattern\",\n            \"id\": \"{{index_pattern}}\"\n        },\n        {\n            \"name\": \"kibanaSavedObjectMeta.searchSourceJSON.filter[2].meta.index\",\n            \"type\": \"index-pattern\",\n            \"id\": \"{{index_pattern}}\"\n        },\n        {\n            \"name\": \"kibanaSavedObjectMeta.searchSourceJSON.filter[3].meta.index\",\n            \"type\": \"index-pattern\",\n            \"id\": \"{{index_pattern}}\"\n        }\n    ]\n}"
+								},
+								"url": {
+									"raw": "https://elk.oriserve.com/kibana/api/saved_objects/search/deep_insights_{{brand_name}}_{{env}}_socket_logs_search",
+									"protocol": "https",
+									"host": [
+										"elk",
+										"oriserve",
+										"com"
+									],
+									"path": [
+										"kibana",
+										"api",
+										"saved_objects",
+										"search",
+										"deep_insights_{{brand_name}}_{{env}}_socket_logs_search"
 									]
 								}
 							},
