@@ -855,7 +855,7 @@
 											}
 										],
 										"url": {
-											"raw": "https://elk.oriserve.com/kibana/api/saved_objects/_find?search_fields=title&per_page=10&type=search&search=[Deep Insights]vodafone_prod_socket_logs",
+											"raw": "https://elk.oriserve.com/kibana/api/saved_objects/_find?search_fields=title&per_page=10&type=search&search=brand:education-first_env:prod_type:mongo-monitor-logs",
 											"protocol": "https",
 											"host": [
 												"elk",
@@ -888,7 +888,7 @@
 												},
 												{
 													"key": "search",
-													"value": "[Deep Insights]vodafone_prod_socket_logs"
+													"value": "brand:education-first_env:prod_type:mongo-monitor-logs"
 												}
 											]
 										}
@@ -912,7 +912,7 @@
 											}
 										],
 										"url": {
-											"raw": "https://elk.oriserve.com/kibana/api/saved_objects/index-pattern/37cbec90-4a5c-11eb-89f2-ebeeaeb426db",
+											"raw": "https://elk.oriserve.com/kibana/api/saved_objects/index-pattern/d3c1d720-790b-11ec-896c-41cbb52af100",
 											"protocol": "https",
 											"host": [
 												"elk",
@@ -924,7 +924,7 @@
 												"api",
 												"saved_objects",
 												"index-pattern",
-												"37cbec90-4a5c-11eb-89f2-ebeeaeb426db"
+												"d3c1d720-790b-11ec-896c-41cbb52af100"
 											],
 											"query": [
 												{
@@ -982,6 +982,48 @@
 							"name": "Dashboard",
 							"item": [
 								{
+									"name": "dashboard saved-object by ID",
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											},
+											{
+												"key": "kbn-xsrf",
+												"value": "true",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "https://elk.oriserve.com/kibana/api/saved_objects/dashboard/raw_reliant-energy_prod_dashboard",
+											"protocol": "https",
+											"host": [
+												"elk",
+												"oriserve",
+												"com"
+											],
+											"path": [
+												"kibana",
+												"api",
+												"saved_objects",
+												"dashboard",
+												"raw_reliant-energy_prod_dashboard"
+											],
+											"query": [
+												{
+													"key": "fileds",
+													"value": "timeFieldName",
+													"disabled": true
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
 									"name": "Search dashboard",
 									"request": {
 										"method": "GET",
@@ -998,7 +1040,7 @@
 											}
 										],
 										"url": {
-											"raw": "https://elk.oriserve.com/kibana/api/saved_objects/_find?per_page=5&search_fields=title&search=[Deep] t*&type=dashbaord",
+											"raw": "https://elk.oriserve.com/kibana/api/kibana/management/saved_objects/_find?perPage=50&page=1&type=dashboard&fields=title&search=[RAW] reliant*",
 											"protocol": "https",
 											"host": [
 												"elk",
@@ -1008,21 +1050,23 @@
 											"path": [
 												"kibana",
 												"api",
+												"kibana",
+												"management",
 												"saved_objects",
 												"_find"
 											],
 											"query": [
 												{
-													"key": "per_page",
-													"value": "5"
+													"key": "perPage",
+													"value": "50"
 												},
 												{
-													"key": "search_fields",
-													"value": "title"
+													"key": "page",
+													"value": "1"
 												},
 												{
-													"key": "search",
-													"value": "[Deep] t*"
+													"key": "type",
+													"value": "dashboard"
 												},
 												{
 													"key": "fileds",
@@ -1030,8 +1074,12 @@
 													"disabled": true
 												},
 												{
-													"key": "type",
-													"value": "dashbaord"
+													"key": "fields",
+													"value": "title"
+												},
+												{
+													"key": "search",
+													"value": "[RAW] reliant*"
 												}
 											]
 										}
@@ -2901,6 +2949,68 @@
 							"response": []
 						},
 						{
+							"name": "create_raw_mongo_monitor_log_search",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"if (pm.response.code === 200) {",
+											"    pm.collectionVariables.set('raw_mongo_monitor_logs_search_id', pm.response.json().id);",
+											"} else {",
+											"    console.error('Status: ', pm.response.code, '\\nBody: ', pm.response.status, '\\n');",
+											"    throw new Error('Raw mongo monitor log search creation failed!');",
+											"}",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "ApiKey {{ApiKey}}",
+										"type": "text",
+										"disabled": true
+									},
+									{
+										"key": "kbn-xsrf",
+										"value": "true",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"attributes\": {\n        \"title\": \"[RAW] brand:{{brand_name}}_env:{{env}}_type:mongo-monitor-logs\",\n        \"description\": \"Created .via automation by Postman.\",\n        \"hits\": 0,\n        \"columns\": [\n            \"message\",\n            \"cloud.instance.id\"\n        ],\n        \"sort\": [],\n        \"version\": 1,\n        \"kibanaSavedObjectMeta\": {\n            \"searchSourceJSON\": \"{\\\"highlightAll\\\":true,\\\"version\\\":true,\\\"query\\\":{\\\"query\\\":\\\"\\\",\\\"language\\\":\\\"kuery\\\"},\\\"filter\\\":[{\\\"$state\\\":{\\\"store\\\":\\\"appState\\\"},\\\"meta\\\":{\\\"alias\\\":\\\"mongoLogs\\\",\\\"disabled\\\":false,\\\"key\\\":\\\"fields.Type\\\",\\\"negate\\\":false,\\\"params\\\":{\\\"query\\\":\\\"mongoLogs\\\"},\\\"type\\\":\\\"phrase\\\",\\\"indexRefName\\\":\\\"kibanaSavedObjectMeta.searchSourceJSON.filter[0].meta.index\\\"},\\\"query\\\":{\\\"match_phrase\\\":{\\\"fields.Type\\\":\\\"mongoLogs\\\"}}},{\\\"$state\\\":{\\\"store\\\":\\\"appState\\\"},\\\"meta\\\":{\\\"alias\\\":\\\"Unauthorized or Authentication_Failed\\\",\\\"disabled\\\":true,\\\"key\\\":\\\"message\\\",\\\"negate\\\":false,\\\"params\\\":[\\\"*authentication failed*\\\",\\\"*Unauthorized*\\\"],\\\"type\\\":\\\"phrases\\\",\\\"value\\\":\\\"*authentication failed*, *Unauthorized*\\\",\\\"indexRefName\\\":\\\"kibanaSavedObjectMeta.searchSourceJSON.filter[1].meta.index\\\"},\\\"query\\\":{\\\"bool\\\":{\\\"minimum_should_match\\\":1,\\\"should\\\":[{\\\"match_phrase\\\":{\\\"message\\\":\\\"*authentication failed*\\\"}},{\\\"match_phrase\\\":{\\\"message\\\":\\\"*Unauthorized*\\\"}}]}}},{\\\"$state\\\":{\\\"store\\\":\\\"appState\\\"},\\\"meta\\\":{\\\"alias\\\":\\\"Connection Accepted\\\",\\\"disabled\\\":true,\\\"key\\\":\\\"message\\\",\\\"negate\\\":false,\\\"params\\\":{\\\"query\\\":\\\"*connection accepted*\\\"},\\\"type\\\":\\\"phrase\\\",\\\"indexRefName\\\":\\\"kibanaSavedObjectMeta.searchSourceJSON.filter[2].meta.index\\\"},\\\"query\\\":{\\\"match_phrase\\\":{\\\"message\\\":\\\"*connection accepted*\\\"}}},{\\\"$state\\\":{\\\"store\\\":\\\"appState\\\"},\\\"meta\\\":{\\\"alias\\\":\\\"Errors\\\",\\\"disabled\\\":true,\\\"key\\\":\\\"message\\\",\\\"negate\\\":false,\\\"params\\\":[\\\"*error*\\\"],\\\"type\\\":\\\"phrases\\\",\\\"value\\\":\\\"*error*\\\",\\\"indexRefName\\\":\\\"kibanaSavedObjectMeta.searchSourceJSON.filter[3].meta.index\\\"},\\\"query\\\":{\\\"bool\\\":{\\\"minimum_should_match\\\":1,\\\"should\\\":[{\\\"match_phrase\\\":{\\\"message\\\":\\\"*error*\\\"}}]}}},{\\\"$state\\\":{\\\"store\\\":\\\"appState\\\"},\\\"meta\\\":{\\\"alias\\\":\\\"All Monitoring logs\\\",\\\"disabled\\\":false,\\\"key\\\":\\\"message\\\",\\\"negate\\\":false,\\\"params\\\":[\\\"*error*\\\",\\\"*authentication failed*\\\",\\\"*Successfully authenticated*\\\",\\\"*Unauthorized*\\\",\\\"*connection accepted*\\\"],\\\"type\\\":\\\"phrases\\\",\\\"value\\\":\\\"*error*, *authentication failed*, *Successfully authenticated*, *Unauthorized*, *connection accepted*\\\",\\\"indexRefName\\\":\\\"kibanaSavedObjectMeta.searchSourceJSON.filter[4].meta.index\\\"},\\\"query\\\":{\\\"bool\\\":{\\\"minimum_should_match\\\":1,\\\"should\\\":[{\\\"match_phrase\\\":{\\\"message\\\":\\\"*error*\\\"}},{\\\"match_phrase\\\":{\\\"message\\\":\\\"*authentication failed*\\\"}},{\\\"match_phrase\\\":{\\\"message\\\":\\\"*Successfully authenticated*\\\"}},{\\\"match_phrase\\\":{\\\"message\\\":\\\"*Unauthorized*\\\"}},{\\\"match_phrase\\\":{\\\"message\\\":\\\"*connection accepted*\\\"}}]}}},{\\\"$state\\\":{\\\"store\\\":\\\"appState\\\"},\\\"meta\\\":{\\\"alias\\\":\\\"Successfully Authenticated\\\",\\\"disabled\\\":true,\\\"key\\\":\\\"message\\\",\\\"negate\\\":false,\\\"params\\\":{\\\"query\\\":\\\"*Successfully authenticated*\\\"},\\\"type\\\":\\\"phrase\\\",\\\"indexRefName\\\":\\\"kibanaSavedObjectMeta.searchSourceJSON.filter[5].meta.index\\\"},\\\"query\\\":{\\\"match_phrase\\\":{\\\"message\\\":\\\"*Successfully authenticated*\\\"}}}],\\\"indexRefName\\\":\\\"kibanaSavedObjectMeta.searchSourceJSON.index\\\"}\"\n        }\n    },\n    \"references\": [\n        {\n            \"name\": \"kibanaSavedObjectMeta.searchSourceJSON.index\",\n            \"type\": \"index-pattern\",\n            \"id\": \"{{raw_index_pattern_id}}\"\n        },\n        {\n            \"name\": \"kibanaSavedObjectMeta.searchSourceJSON.filter[0].meta.index\",\n            \"type\": \"index-pattern\",\n            \"id\": \"{{raw_index_pattern_id}}\"\n        },\n        {\n            \"name\": \"kibanaSavedObjectMeta.searchSourceJSON.filter[1].meta.index\",\n            \"type\": \"index-pattern\",\n            \"id\": \"{{raw_index_pattern_id}}\"\n        },\n        {\n            \"name\": \"kibanaSavedObjectMeta.searchSourceJSON.filter[2].meta.index\",\n            \"type\": \"index-pattern\",\n            \"id\": \"{{raw_index_pattern_id}}\"\n        },\n        {\n            \"name\": \"kibanaSavedObjectMeta.searchSourceJSON.filter[3].meta.index\",\n            \"type\": \"index-pattern\",\n            \"id\": \"{{raw_index_pattern_id}}\"\n        },\n        {\n            \"name\": \"kibanaSavedObjectMeta.searchSourceJSON.filter[4].meta.index\",\n            \"type\": \"index-pattern\",\n            \"id\": \"{{raw_index_pattern_id}}\"\n        },\n        {\n            \"name\": \"kibanaSavedObjectMeta.searchSourceJSON.filter[5].meta.index\",\n            \"type\": \"index-pattern\",\n            \"id\": \"{{raw_index_pattern_id}}\"\n        }\n    ]\n}"
+								},
+								"url": {
+									"raw": "https://elk.oriserve.com/kibana/api/saved_objects/search/raw_{{brand_name}}_{{env}}_mongo_monitor_logs_search",
+									"protocol": "https",
+									"host": [
+										"elk",
+										"oriserve",
+										"com"
+									],
+									"path": [
+										"kibana",
+										"api",
+										"saved_objects",
+										"search",
+										"raw_{{brand_name}}_{{env}}_mongo_monitor_logs_search"
+									]
+								}
+							},
+							"response": []
+						},
+						{
 							"name": "create_raw_nginx_access_log_search",
 							"event": [
 								{
@@ -3066,7 +3176,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"attributes\": {\n        \"title\": \"{{rawDashboardName}}\",\n        \"hits\": 0,\n        \"description\": \"{{rawDashbaordDescription}}\",\n        \"panelsJSON\": \"[{\\\"version\\\":\\\"7.10.1\\\",\\\"gridData\\\":{\\\"x\\\":0,\\\"y\\\":0,\\\"w\\\":48,\\\"h\\\":12,\\\"i\\\":\\\"06fd60b0-bd3b-42a0-9e52-c7a39210f7dc\\\"},\\\"panelIndex\\\":\\\"06fd60b0-bd3b-42a0-9e52-c7a39210f7dc\\\",\\\"embeddableConfig\\\":{\\\"title\\\":\\\"Nginx access logs\\\",\\\"hidePanelTitles\\\":false},\\\"title\\\":\\\"Nginx access logs\\\",\\\"panelRefName\\\":\\\"panel_0\\\"},{\\\"version\\\":\\\"7.10.1\\\",\\\"gridData\\\":{\\\"x\\\":0,\\\"y\\\":12,\\\"w\\\":48,\\\"h\\\":14,\\\"i\\\":\\\"37f97453-253c-4d23-86fc-8834ad2a7085\\\"},\\\"panelIndex\\\":\\\"37f97453-253c-4d23-86fc-8834ad2a7085\\\",\\\"embeddableConfig\\\":{\\\"title\\\":\\\"handleAppError | Error | error\\\",\\\"hidePanelTitles\\\":false},\\\"title\\\":\\\"handleAppError | Error | error\\\",\\\"panelRefName\\\":\\\"panel_1\\\"},{\\\"version\\\":\\\"7.10.1\\\",\\\"gridData\\\":{\\\"x\\\":0,\\\"y\\\":26,\\\"w\\\":48,\\\"h\\\":16,\\\"i\\\":\\\"517add2c-a04e-418a-b5f6-29f4e7837b2b\\\"},\\\"panelIndex\\\":\\\"517add2c-a04e-418a-b5f6-29f4e7837b2b\\\",\\\"embeddableConfig\\\":{\\\"title\\\":\\\"OCS Logs\\\",\\\"hidePanelTitles\\\":false},\\\"title\\\":\\\"OCS Logs\\\",\\\"panelRefName\\\":\\\"panel_2\\\"},{\\\"version\\\":\\\"7.10.1\\\",\\\"gridData\\\":{\\\"x\\\":0,\\\"y\\\":42,\\\"w\\\":24,\\\"h\\\":15,\\\"i\\\":\\\"19e42308-63be-4591-99ca-307bd2858ed9\\\"},\\\"panelIndex\\\":\\\"19e42308-63be-4591-99ca-307bd2858ed9\\\",\\\"embeddableConfig\\\":{\\\"title\\\":\\\"Scheduler Logs\\\",\\\"hidePanelTitles\\\":false},\\\"title\\\":\\\"Scheduler Logs\\\",\\\"panelRefName\\\":\\\"panel_3\\\"},{\\\"version\\\":\\\"7.10.1\\\",\\\"gridData\\\":{\\\"x\\\":24,\\\"y\\\":42,\\\"w\\\":24,\\\"h\\\":15,\\\"i\\\":\\\"42b2cf0e-6efe-4d24-84e2-ef824f135466\\\"},\\\"panelIndex\\\":\\\"42b2cf0e-6efe-4d24-84e2-ef824f135466\\\",\\\"embeddableConfig\\\":{\\\"title\\\":\\\"Users Logs\\\",\\\"hidePanelTitles\\\":false},\\\"title\\\":\\\"Users Logs\\\",\\\"panelRefName\\\":\\\"panel_4\\\"},{\\\"version\\\":\\\"7.10.1\\\",\\\"gridData\\\":{\\\"x\\\":0,\\\"y\\\":57,\\\"w\\\":48,\\\"h\\\":15,\\\"i\\\":\\\"3796bc88-56fc-497d-b6a7-e6a50b5f5954\\\"},\\\"panelIndex\\\":\\\"3796bc88-56fc-497d-b6a7-e6a50b5f5954\\\",\\\"embeddableConfig\\\":{\\\"title\\\":\\\"Mongo logs\\\",\\\"hidePanelTitles\\\":false},\\\"title\\\":\\\"Mongo logs\\\",\\\"panelRefName\\\":\\\"panel_5\\\"}]\",\n        \"optionsJSON\": \"{\\\"useMargins\\\":true,\\\"hidePanelTitles\\\":false}\",\n        \"version\": 1,\n        \"timeRestore\": true,\n        \"timeTo\": \"now\",\n        \"timeFrom\": \"now-15m\",\n        \"refreshInterval\": {\n            \"pause\": true,\n            \"value\": 0\n        },\n        \"kibanaSavedObjectMeta\": {\n            \"searchSourceJSON\": \"{\\\"query\\\":{\\\"query\\\":\\\"\\\",\\\"language\\\":\\\"kuery\\\"},\\\"filter\\\":[]}\"\n        }\n    },\n    \"references\": [\n        {\n            \"name\": \"panel_0\",\n            \"type\": \"search\",\n            \"id\": \"{{raw_nginx_access_logs_search_id}}\"\n        },\n        {\n            \"name\": \"panel_1\",\n            \"type\": \"search\",\n            \"id\": \"{{raw_ocs_error_logs_search_id}}\"\n        },\n        {\n            \"name\": \"panel_2\",\n            \"type\": \"search\",\n            \"id\": \"{{raw_ocs_logs_search_id}}\"\n        },\n        {\n            \"name\": \"panel_3\",\n            \"type\": \"search\",\n            \"id\": \"{{raw_scheduler_logs_search_id}}\"\n        },\n        {\n            \"name\": \"panel_4\",\n            \"type\": \"search\",\n            \"id\": \"{{raw_users_logs_search_id}}\"\n        },\n        {\n            \"name\": \"panel_5\",\n            \"type\": \"search\",\n            \"id\": \"{{raw_mongo_logs_search_id}}\"\n        }\n    ]\n}"
+									"raw": "{\n    \"attributes\": {\n        \"title\": \"{{rawDashboardName}}\",\n        \"hits\": 0,\n        \"description\": \"{{rawDashbaordDescription}}\",\n        \"panelsJSON\": \"[{\\\"version\\\":\\\"7.10.1\\\",\\\"gridData\\\":{\\\"x\\\":0,\\\"y\\\":0,\\\"w\\\":48,\\\"h\\\":12,\\\"i\\\":\\\"06fd60b0-bd3b-42a0-9e52-c7a39210f7dc\\\"},\\\"panelIndex\\\":\\\"06fd60b0-bd3b-42a0-9e52-c7a39210f7dc\\\",\\\"embeddableConfig\\\":{\\\"title\\\":\\\"Nginx access logs\\\",\\\"hidePanelTitles\\\":false},\\\"title\\\":\\\"Nginx access logs\\\",\\\"panelRefName\\\":\\\"panel_0\\\"},{\\\"version\\\":\\\"7.10.1\\\",\\\"gridData\\\":{\\\"x\\\":0,\\\"y\\\":12,\\\"w\\\":48,\\\"h\\\":14,\\\"i\\\":\\\"37f97453-253c-4d23-86fc-8834ad2a7085\\\"},\\\"panelIndex\\\":\\\"37f97453-253c-4d23-86fc-8834ad2a7085\\\",\\\"embeddableConfig\\\":{\\\"title\\\":\\\"handleAppError | Error | error\\\",\\\"hidePanelTitles\\\":false},\\\"title\\\":\\\"handleAppError | Error | error\\\",\\\"panelRefName\\\":\\\"panel_1\\\"},{\\\"version\\\":\\\"7.10.1\\\",\\\"gridData\\\":{\\\"x\\\":0,\\\"y\\\":26,\\\"w\\\":48,\\\"h\\\":16,\\\"i\\\":\\\"517add2c-a04e-418a-b5f6-29f4e7837b2b\\\"},\\\"panelIndex\\\":\\\"517add2c-a04e-418a-b5f6-29f4e7837b2b\\\",\\\"embeddableConfig\\\":{\\\"title\\\":\\\"OCS Logs\\\",\\\"hidePanelTitles\\\":false},\\\"title\\\":\\\"OCS Logs\\\",\\\"panelRefName\\\":\\\"panel_2\\\"},{\\\"version\\\":\\\"7.10.1\\\",\\\"gridData\\\":{\\\"x\\\":0,\\\"y\\\":42,\\\"w\\\":24,\\\"h\\\":15,\\\"i\\\":\\\"19e42308-63be-4591-99ca-307bd2858ed9\\\"},\\\"panelIndex\\\":\\\"19e42308-63be-4591-99ca-307bd2858ed9\\\",\\\"embeddableConfig\\\":{\\\"title\\\":\\\"Scheduler Logs\\\",\\\"hidePanelTitles\\\":false},\\\"title\\\":\\\"Scheduler Logs\\\",\\\"panelRefName\\\":\\\"panel_3\\\"},{\\\"version\\\":\\\"7.10.1\\\",\\\"gridData\\\":{\\\"x\\\":24,\\\"y\\\":42,\\\"w\\\":24,\\\"h\\\":15,\\\"i\\\":\\\"42b2cf0e-6efe-4d24-84e2-ef824f135466\\\"},\\\"panelIndex\\\":\\\"42b2cf0e-6efe-4d24-84e2-ef824f135466\\\",\\\"embeddableConfig\\\":{\\\"title\\\":\\\"Users Logs\\\",\\\"hidePanelTitles\\\":false},\\\"title\\\":\\\"Users Logs\\\",\\\"panelRefName\\\":\\\"panel_4\\\"},{\\\"version\\\":\\\"7.10.1\\\",\\\"gridData\\\":{\\\"x\\\":0,\\\"y\\\":57,\\\"w\\\":48,\\\"h\\\":15,\\\"i\\\":\\\"3796bc88-56fc-497d-b6a7-e6a50b5f5954\\\"},\\\"panelIndex\\\":\\\"3796bc88-56fc-497d-b6a7-e6a50b5f5954\\\",\\\"embeddableConfig\\\":{\\\"title\\\":\\\"Mongo logs\\\",\\\"hidePanelTitles\\\":false},\\\"title\\\":\\\"Mongo logs\\\",\\\"panelRefName\\\":\\\"panel_5\\\"},{\\\"version\\\":\\\"7.10.1\\\",\\\"gridData\\\":{\\\"x\\\":0,\\\"y\\\":72,\\\"w\\\":48,\\\"h\\\":18,\\\"i\\\":\\\"ccba1d3c-aa79-42cf-8241-e3f805c2f2a8\\\"},\\\"panelIndex\\\":\\\"ccba1d3c-aa79-42cf-8241-e3f805c2f2a8\\\",\\\"embeddableConfig\\\":{\\\"title\\\":\\\"Mongo logs - Audit filtered\\\",\\\"hidePanelTitles\\\":false},\\\"title\\\":\\\"Mongo logs - Audit filtered\\\",\\\"panelRefName\\\":\\\"panel_6\\\"}]\",\n        \"optionsJSON\": \"{\\\"useMargins\\\":true,\\\"hidePanelTitles\\\":false}\",\n        \"version\": 1,\n        \"timeRestore\": true,\n        \"timeTo\": \"now\",\n        \"timeFrom\": \"now-15m\",\n        \"refreshInterval\": {\n            \"pause\": true,\n            \"value\": 0\n        },\n        \"kibanaSavedObjectMeta\": {\n            \"searchSourceJSON\": \"{\\\"query\\\":{\\\"query\\\":\\\"\\\",\\\"language\\\":\\\"kuery\\\"},\\\"filter\\\":[]}\"\n        }\n    },\n    \"references\": [\n        {\n            \"name\": \"panel_0\",\n            \"type\": \"search\",\n            \"id\": \"{{raw_nginx_access_logs_search_id}}\"\n        },\n        {\n            \"name\": \"panel_1\",\n            \"type\": \"search\",\n            \"id\": \"{{raw_ocs_error_logs_search_id}}\"\n        },\n        {\n            \"name\": \"panel_2\",\n            \"type\": \"search\",\n            \"id\": \"{{raw_ocs_logs_search_id}}\"\n        },\n        {\n            \"name\": \"panel_3\",\n            \"type\": \"search\",\n            \"id\": \"{{raw_scheduler_logs_search_id}}\"\n        },\n        {\n            \"name\": \"panel_4\",\n            \"type\": \"search\",\n            \"id\": \"{{raw_users_logs_search_id}}\"\n        },\n        {\n            \"name\": \"panel_5\",\n            \"type\": \"search\",\n            \"id\": \"{{raw_mongo_logs_search_id}}\"\n        },\n        {\n            \"name\": \"panel_6\",\n            \"type\": \"search\",\n            \"id\": \"{{raw_mongo_monitor_logs_search_id}}\"\n        }\n    ]\n}"
 								},
 								"url": {
 									"raw": "https://elk.oriserve.com/kibana/api/saved_objects/dashboard/raw_{{brand_name}}_{{env}}_dashboard",
