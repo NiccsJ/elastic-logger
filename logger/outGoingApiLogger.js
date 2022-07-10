@@ -4,7 +4,7 @@ const { errorHandler, elasticError } = require('../utils/errorHandler');
 const { shipDataToElasticsearch } = require('../utils/utilities');
 const { debug } = require('../utils/constants');
 
-const overwriteHttpProtocol = async ({ microServiceName, brand_name, cs_env, batchSize, timezone = 'Asia/Calcutta', elasticUrl = process.env.elasticUrl, kibanaUrl = process.env.kibanaUrl }) => {
+const overwriteHttpProtocol = async ({ microServiceName, brand_name, cs_env, batchSize, timezone = 'Asia/Calcutta', elasticUrl = process.env.elasticUrl, kibanaUrl = process.env.kibanaUrl, ship = true }) => {
     try {
         url = elasticUrl;
         if (!url) throw new elasticError({ name: 'Initialization failed:', message: `overwriteHttpProtocol: 'elasticUrl' argument missing`, type: 'elastic-logger', status: 999 });
@@ -49,7 +49,7 @@ const overwriteHttpProtocol = async ({ microServiceName, brand_name, cs_env, bat
                                         responseLogObject.headers = res.headers;
                                         responseLogObject.responseSize = responseSize;
                                         //skip when headers contain transfer-encoding: 'chunked'
-                                        outBoundApiLogger({ requestLogObject, responseLogObject, microServiceName, brand_name, cs_env, batchSize, timezone });
+                                        outBoundApiLogger({ requestLogObject, responseLogObject, microServiceName, brand_name, cs_env, batchSize, timezone, ship });
                                     });
                                 }
                                 if (callback) {
@@ -78,7 +78,7 @@ const overwriteHttpProtocol = async ({ microServiceName, brand_name, cs_env, bat
     }
 };
 
-const outBoundApiLogger = async ({ requestLogObject, responseLogObject, microServiceName, brand_name, cs_env, batchSize, timezone }) => {
+const outBoundApiLogger = async ({ requestLogObject, responseLogObject, microServiceName, brand_name, cs_env, batchSize, timezone, ship = true }) => {
     try {
         let { href, headers, method, requestStart } = requestLogObject;
         const { statusCode, responseSize } = responseLogObject;
@@ -116,7 +116,7 @@ const outBoundApiLogger = async ({ requestLogObject, responseLogObject, microSer
         };
 
         if (debug) console.log('\n<><><><> DEBUG <><><><>\nOutgoingLog: ', log, '\n');
-        shipDataToElasticsearch({ log, microServiceName, brand_name, cs_env, batchSize, timezone, exporterType: 'api' });
+        if (ship) shipDataToElasticsearch({ log, microServiceName, brand_name, cs_env, batchSize, timezone, exporterType: 'api' });
     } catch (err) {
         errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.outBoundApiLogger' });
     }

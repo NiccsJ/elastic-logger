@@ -18,14 +18,25 @@ const adapterLogBody = (client) => {
     }
 };
 
+const isLogBodyEnabled = (headers) => {
+    let status = false;
+    try {
+        // this.headers && this.headers.logBody == "true" ? reqBody : 'body logging is disabled',
+        // status = true;
+    } catch (err) {
+        errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.isLogBody' });
+        return status;
+    }
+};
+
 const morphAccessLogs = ({ type, socket, event, data, req, res, date, dateTime, requestStart, microServiceName }) => {
     let log = {};
     try {
         switch (type) {
             case 'http-access': {
-                let { headers, httpVersion, method, socket, url, originalUrl } = req;
+                let { headers, httpVersion, method, socket, url, originalUrl, body: reqBody } = req; //get req body
                 let { remoteAddress, remoteFamily } = socket;
-                let { statusCode, statusMessage } = res;
+                let { headers: resHeaders, body: resBody, statusCode, statusMessage } = res; //get res headers and body
                 let processingTime = Date.now() - requestStart;
                 log = {
                     url: (url == '/') ? originalUrl : url,
@@ -36,6 +47,18 @@ const morphAccessLogs = ({ type, socket, event, data, req, res, date, dateTime, 
                     statusCode,
                     statusMessage,
                     processingTime,
+                    req: {
+                        url: log.url ? log.url : "",
+                        method,
+                        headers,
+                        body: isLogBodyEnabled(this.headers, true, []) ? reqBody : 'body logging is disabled'
+                    },
+                    res: {
+                        headers: resHeaders ? resHeaders : {},
+                        statusCode,
+                        statusMessage,
+                        body: isLogBodyEnabled(this.headers, this.statusCode, []) ? reqBody : 'body logging is disabled',
+                    },
                     logType: 'accessLogs',
                 };
                 break;
@@ -97,7 +120,7 @@ const exportAccessLogs = ({ microServiceName, brand_name, cs_env, batchSize, tim
                     const date = momentTimezone().tz(timezone).startOf('day').format('YYYY-MM-DD');
                     const dateTime = momentTimezone().tz(timezone).format();
                     const log = morphAccessLogs({ type: 'http-access', req, res, date, dateTime, requestStart, microServiceName });
-                    // if (debug) console.log('\n<><><><><><><><><><><><><><><><> DEBUG <><><><><><><><><><><><><><><><>\nAccessLog: ', log, '\n');
+                    if (debug) console.log('\n<><><><><><><><><><><><><><><><> DEBUG <><><><><><><><><><><><><><><><>\nAccessLog: ', log, '\n');
                     if (ship) shipDataToElasticsearch({ log, microServiceName, brand_name, cs_env, batchSize, timezone, exporterType: 'access' });
                 } catch (err) {
                     errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.exportAccessLogs.res.on' });
