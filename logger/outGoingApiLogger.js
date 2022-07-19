@@ -28,7 +28,7 @@ const overwriteHttpProtocol = async ({ microServiceName, brand_name, cs_env, bat
                                 const ips = ipPorts.map(ipPort => { return ipPort.split(":")[0] });
                                 const hostname = (options && options.href) ? options.href : (options && options.hostname) ? options.hostname : null;
                                 if (hostname && !ips.includes(hostname)) {
-                                    if (debug) console.log('\n<><><><> DEBUG <><><><>\nRequest Hostname: ', hostname, '\nElastic-Kibana IPs/URLs: ', ips, '\n');
+                                    if (debug) console.log('\n<><><><> DEBUG <><><><>\nRequest Hostname: ', hostname, '\nElastic-Kibana IPs/URLs: ', ips, '\n<><><><> DEBUG <><><><>\n');
                                     if (res.headers && res.headers['content-length']) {
                                         responseSize = Number(res.headers['content-length']);
                                     } else {
@@ -108,6 +108,7 @@ const outBoundApiLogger = async ({ requestLogObject, responseLogObject, microSer
             headers,
             statusCode,
             responseSize,
+            request: requestLogObject,
             response: responseLogObject,
             microService: microServiceName ? microServiceName : 'default',
             logType: 'apiLogs',
@@ -115,7 +116,7 @@ const outBoundApiLogger = async ({ requestLogObject, responseLogObject, microSer
             "@timestamp": dateTime,
         };
 
-        if (debug) console.log('\n<><><><> DEBUG <><><><>\nOutgoingLog: ', log, '\n');
+        if (debug) console.log('\n<><><><> DEBUG <><><><>\nOutgoingLog: ', log, '\n<><><><> DEBUG <><><><>\n');
         if (ship) shipDataToElasticsearch({ log, microServiceName, brand_name, cs_env, batchSize, timezone, exporterType: 'api' });
     } catch (err) {
         errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.outBoundApiLogger' });

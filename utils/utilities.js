@@ -66,7 +66,7 @@ const getCloudMetadata = async (cloudType) => {
                 break;
         }
         cachedCloudMetadata = cloudMetadataObj;
-        if (debug) console.log('\n<><><><> DEBUG <><><><>\ngetCloudMetadata---: ', 'cachedCloudMetadata: ', cachedCloudMetadata, '\n');
+        if (debug) console.log('\n<><><><> DEBUG <><><><>\ngetCloudMetadata: ', 'cachedCloudMetadata: ', cachedCloudMetadata, '\n<><><><> DEBUG <><><><>\n');
         return cloudMetadataObj;
     } catch (err) {
         errorHandler({ err, self: true, ship: false, scope: '@niccsj/elastic-logger.getCloudMetadata' });
@@ -77,14 +77,61 @@ const getCloudMetadata = async (cloudType) => {
 
 if (enableCloudMetadata) getCloudMetadata(cloudType);
 
+const isObjEmpty = (obj) => {
+    try {
+        for (let key in obj) { if (obj.hasOwnProperty(key)) return false; }
+        return true;
+    } catch (err) {
+        errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.isObjEmpty' });
+        return true;
+    }
+
+};
+
+const isLogBodyEnabled = (headers, statusCode, type) => { // TODO: use type and an additional header to conditionally enable either req or res body logging
+    let status = false;
+    try {
+        const { logbody, skipstatus, includestatus } = headers;
+        if (!logbody) return status;
+        if (logbody.toString() == 'true') {
+            if (skipstatus || includestatus) {
+                statusCode = statusCode?.toString();
+                const skipStatusArray = skipstatus?.split(',').map(s => s?.trim());
+                const includeStatusArray = includestatus?.split(',').map(s => s?.trim());
+
+                if (debug) console.log('\n<><><><> DEBUG <><><><>\nskipStatusArray: ', skipStatusArray, '\n<><><><> DEBUG <><><><>\n');
+                if (debug) console.log('\n<><><><> DEBUG <><><><>\nincludeStatusArray: ', includeStatusArray, '\n<><><><> DEBUG <><><><>\n');
+
+                if (Array.isArray(skipStatusArray) || Array.isArray(includeStatusArray)) {
+                    if (includeStatusArray?.includes(statusCode)) {
+                        if (debug) console.log('<><><> INCLUDE <><><>', statusCode, includeStatusArray, skipStatusArray);
+                        status = true;
+                    }
+                    if (!skipStatusArray?.includes(statusCode)) {
+                        if (debug) console.log('<><><> SKIP <><><>', statusCode, includeStatusArray, skipStatusArray);
+                        status = true;
+                    }
+                }
+            } else {
+                status = true;
+            }
+        }
+    } catch (err) {
+        status = false;
+        errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.isLogBodyEnabled' }); //should ship be true? //no, will create too much traffic in error logs
+    }
+    return status;
+};
+
 const checkSuppliedArguments = async ({ err, esConnObj, microServiceName, brand_name, cs_env, batchSize, timezone, exporterType }, argCheckCount = 0) => {
     try {
-        if (debug) console.log('\n<><><><> DEBUG <><><><>\ncheckSuppliedArguments---: ', 'exporterType: ', exporterType, '\n');
+        if (debug) console.log('\n<><><><> DEBUG <><><><>\ncheckSuppliedArguments: ', 'exporterType: ', exporterType, '\n<><><><> DEBUG <><><><>\n');
         let argsValid = false;
         const suppliedArgs = { err, esConnObj, microServiceName, brand_name, cs_env, batchSize, timezone };
         let argsMissing = Object.values(suppliedArgs).some(o => !o);
 
         if (argCheckCount < 3 && argsMissing && exporterType != 'initializer') {
+            if (debug) console.log('\n<><><><> DEBUG <><><><>\nARGS MISSING: ', JSON.stringify(suppliedArgs, null, 4), '\n<><><><> DEBUG <><><><>\n');
             if (!defaultLoggerDetails) defaultLoggerDetails = require('../utils/elasticHandler/initializeElasticLogger').esClientObj.defaultLoggerDetails;
             argCheckCount++;
             const newDefaultLogger = {};
@@ -107,9 +154,12 @@ const checkSuppliedArguments = async ({ err, esConnObj, microServiceName, brand_
                 if (!suppliedArgs[key]) missingArgs.push(`{${key}: ${suppliedArgs[key]}}`);
             }
             throw new elasticError({ name: 'Argument(s) validation error:', message: `Please supply all required arguments. Supplied arguments: ${missingArgs}, for exporterType: ${exporterType}`, type: 'elastic-logger', status: 998 });
-        } else if (esConnObj === true) {
-            argsValid = true;
-        } else {
+        }
+        // else if (esConnObj === true) {
+        //     argsValid = true;
+        // }
+        else {
+            if (debug) console.log('\n<><><><> DEBUG <><><><>\nARGS NOT MISSING: ', JSON.stringify(suppliedArgs, null, 4), '\n<><><><> DEBUG <><><><>\n');
             if ((esConnObj && !(esConnObj.authType == 'none' || esConnObj.authType == 'basic' || esConnObj.authType == 'api'))) {
                 throw new elasticError({ name: 'Argument(s) validation error:', message: `Invalid authType specified: '${esConnObj.authType}'. Allowed values are: 'none', 'basic', 'api'.`, type: 'elastic-logger', status: 998 });
             } else if (esConnObj && (esConnObj.authType == 'basic' || esConnObj.authType == 'api')) {
@@ -120,7 +170,9 @@ const checkSuppliedArguments = async ({ err, esConnObj, microServiceName, brand_
             } else {
                 argsValid = true;
             }
+            if (!defaultLoggerDetails) defaultLoggerDetails = suppliedArgs; //initialise the deafaultLoggerDeatils
         }
+        if (debug) console.log('\n<><><><> DEBUG <><><><>\nES CLIENT OBJ DEFAULT LOGGER DETAILS OUTSIDE: ', JSON.stringify(defaultLoggerDetails, null, 4), '\n<><><><> DEBUG <><><><>\n');
         if (exporterType === 'initializer') initializerValid = argsValid;
         return argsValid;
     } catch (err) {
@@ -155,7 +207,7 @@ const shipDataToElasticsearch = async ({ log, esConnObj, microServiceName, brand
         cs_env = cs_env ? cs_env : defaultLoggerDetails.cs_env;
         const index = `${cs_env}_${brand_name}`;
         batchRequest.push(log);
-        if (debug) console.log('\n<><><><> DEBUG <><><><>\nCurrent Batch: ', batchRequest.length, 'Total Batch Size: ', batchSize, 'Index: ', index, '\n');
+        if (debug) console.log('\n<><><><> DEBUG <><><><>\nCurrent Batch: ', batchRequest.length, 'Total Batch Size: ', batchSize, 'Index: ', index, '\n<><><><> DEBUG <><><><>\n');
         if ((batchRequest.length >= batchSize)) {
             bulkIndex(batchRequest, index);
             batchRequest = [];
@@ -168,4 +220,6 @@ const shipDataToElasticsearch = async ({ log, esConnObj, microServiceName, brand
 module.exports = {
     checkSuppliedArguments,
     shipDataToElasticsearch,
+    isObjEmpty,
+    isLogBodyEnabled
 };

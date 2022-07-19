@@ -4,7 +4,7 @@ const { checkSuppliedArguments } = require('../utilities');
 const { errorHandler } = require('../errorHandler');
 const { setUpILM, putIndexTemplate, putDefaultComponetTemplate } = require('../elasticHandler/elasticApi');
 const { overwriteHttpProtocol } = require('../../logger/outGoingApiLogger');
-const { defaultIlmPolicyValues, defaultIndexTemplateValues, defaultInitializationValues, defaultKibanaValues, dynamicTemplateComponentTemplateSettings, metadataCompomentTempalteSettings } = require('../constants');
+const { defaultIlmPolicyValues, defaultIndexTemplateValues, defaultInitializationValues, defaultKibanaValues, dynamicTemplateComponentTemplateSettings, metadataCompomentTempalteSettings, debug } = require('../constants');
 
 const connection = async (esConnObj) => {
 	try {
@@ -83,6 +83,7 @@ const initializeElasticLogger = async ({ esConnObj, brand_name, cs_env, microSer
 			esClientObj.status = true;
 			esClientObj.defaultLoggerDetails = { esConnObj, brand_name, cs_env, microServiceName, batchSize, timezone };
 			console.log('-----------------------ELASTIC-LOGGER INITIALIZED-----------------------');
+			if (debug) console.log('\n<><><><> DEBUG <><><><>\nES CLIENT OBJ DEFAULT LOGGER DETAILS: ', JSON.stringify(esClientObj.defaultLoggerDetails, null, 4), '\n<><><><> DEBUG <><><><>\n');
 
 			if (kibanaUrl) {
 				console.log('-----------------------KIBANA APIs ENABLED-----------------------');

@@ -23,17 +23,17 @@ const componetTemplateExists = async (componentTemplateName) => {
 
 const putDefaultComponetTemplate = async ({ mappings, overwriteMappings, componentTemplateName }) => {
     try {
-        const notOverwrite = !overwriteMappings; //just to avoid confusion owith the working of create option.
+        const create = !overwriteMappings; //just to avoid confusion owith the working of create option.
         if (!client) client = require('./initializeElasticLogger').esClientObj.client;
-        if (notOverwrite) if (await componetTemplateExists([componentTemplateName])) return true;
+        if (create) if (await componetTemplateExists([componentTemplateName])) return true;
         const options = {};
         options.name = componentTemplateName;
-        options.create = !overwriteMappings; //Will overwrite if false, throws an tempalte exists exception otherwise! Yeah, talk about shit that don't make sense!
+        options.create = create; //Will overwrite if false, throws an tempalte exists exception otherwise! Yeah, talk about shit that don't make sense!
         options.body = {};
         options.body.template = { mappings };
 
         const { body: response, statusCode: status } = await client.cluster.putComponentTemplate(options);
-        if (debug) console.log('\n<><><><> DEBUG <><><><>\nputDefaultComponetTemplate: ', status, response, '\n');
+        if (debug) console.log('\n<><><><> DEBUG <><><><>\nputDefaultComponetTemplate: ', status, response, '\n<><><><> DEBUG <><><><>\n');
         if (status == 200) return true;
 
     } catch (err) {
@@ -127,19 +127,19 @@ const setUpILM = async ({ policyName, size, hotDuration, warmAfter, deleteAfter,
 
 const putIndexTemplate = async ({ brand_name, cs_env, microServiceName, primaryShards, replicaShards, priority, overwrite, dynamicMappings, metadataMappings, overwriteMappings }) => {
     try {
-        const notOverwrite = !overwrite; //just to avoid confusion with the working of create option
+        const create = !overwrite; //just to avoid confusion with the working of create option
         if (!client) client = require('./initializeElasticLogger').esClientObj.client;
-        // let updateDefaultComponentTemplate = await putDefaultComponetTemplate({ mappings, overwriteMappings, componentTemplateName });
-        const checkOrCreateDynamicTemplateComponent = await putDefaultComponetTemplate({ componentTemplateName: "common_dynamic_template_component_template", mappings: dynamicMappings, overwriteMappings: false });
-        const checkOrCreateMetadatComponent = await putDefaultComponetTemplate({ componentTemplateName: "common_metadata_component_template", mappings: metadataMappings, overwriteMappings });
         const prefix = (cs_env && brand_name) ? `${cs_env}_${brand_name}` : 'default_elastic_logger';
         const templateName = `${prefix}_template`;
         const ilmPolicyName = `${prefix}_policy`;
-        if (notOverwrite) if (await getIndexTemplate(templateName)) return;
+        if (create) if (await getIndexTemplate(templateName)) return;
+
+        const checkOrCreateDynamicTemplateComponent = await putDefaultComponetTemplate({ componentTemplateName: "common_dynamic_template_component_template", mappings: dynamicMappings, overwriteMappings: false });
+        const checkOrCreateMetadatComponent = await putDefaultComponetTemplate({ componentTemplateName: "common_metadata_component_template", mappings: metadataMappings, overwriteMappings });
 
         const options = {};
         options.name = templateName;
-        options.create = !overwrite; //Will overwrite if false, throws an tempalte exists exception otherwise! Yeah, talk about shit that don't make sense!
+        options.create = create; //Will overwrite if false, throws an tempalte exists exception otherwise! Yeah, talk about shit that don't make sense!
         options.body = {};
         options.body.priority = priority;
         options.body.index_patterns = [`${prefix}$$-*`];
@@ -149,7 +149,7 @@ const putIndexTemplate = async ({ brand_name, cs_env, microServiceName, primaryS
         if (checkOrCreateMetadatComponent) options.body.composed_of.push("common_metadata_component_template");
 
         const { body: response, statusCode: status } = await client.indices.putIndexTemplate(options);
-        if (debug) console.log('\n<><><><> DEBUG <><><><>\nputIndexTemplate: ', response, '\n');
+        if (debug) console.log('\n<><><><> DEBUG <><><><>\nputIndexTemplate: ', response, '\n<><><><> DEBUG <><><><>\n');
         const bootStrapIndex = await createInitialIndex({ brand_name, cs_env, microServiceName });
         // if (!bootStrapIndex) throw new elasticError({ name: 'ElasticAPI error:', message: '', type: 'elastic-logger', status: 888 });
 
@@ -175,9 +175,9 @@ const bulkIndex = async (logs, index) => {
             throw new elasticError({ name: 'ElasticAPI error:', message: `${safeStringify(bulkResponse.items)}`, type: 'elastic-logger', status: 888 });
         }
         //handle error
-        if (debug) console.log('\n<><><><> DEBUG <><><><>\nbulkResponse: ', bulkResponse, '\n');
+        if (debug) console.log('\n<><><><> DEBUG <><><><>\nbulkResponse: ', bulkResponse, '\n<><><><> DEBUG <><><><>\n');
     } catch (err) {
-        errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.bulkIndex' });
+        errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.bulkIndex' }); //ship: true? otherwise we won't know if all logs are being shipped or not
     }
 };
 
