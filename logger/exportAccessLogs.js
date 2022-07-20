@@ -38,35 +38,44 @@ const adapterLogBody = (client) => {
     }
 };
 
-const getLogBody = (headers, body, statusCode, type = 'request') => { //type not being used for now
+const getLogBody = (reqHeaders, body, statusCode, type = 'req') => { //type not being used for now
     let finalBody = {};
     try {
-        if (!body || isObjEmpty(body)) return finalBody.elasticBodyDefault = 'body not found in the request';
-        if (!headers || isObjEmpty(headers)) return finalBody.elasticBodyDefault = 'headers not found in the request';
+        if (!body || isObjEmpty(body)) return finalBody = { elasticBodyDefault: 'body not found in the request' };
+        if (!reqHeaders || isObjEmpty(reqHeaders)) return finalBody = { elasticBodyDefault: 'headers not found in the request' };
+        if (!isLogBodyEnabled(reqHeaders, statusCode)) return finalBody = { elasticBodyDefault: 'body logging not enabled for this request' };
 
-        if (!isLogBodyEnabled(headers, statusCode, type)) return finalBody.elasticBodyDefault = 'body logging not enabled for this request';
+        // const contentType = type == 'res' ? resHeaders['content-type'] : reqHeaders['content-type'];
 
-        switch (true) {
-            case (headers['content-type'] == 'application/json' || new RegExp('application\/json').test(headers['content-type'])):
-                {
-                    try {
-                        JSON.stringify(body);
-                        finalBody.json = body; //convert all keys of body to string recursively? //too much work and might cause cpu load
-                    } catch (err) {
-                        finalBody.elasticBodyDefault = 'Invalid json received';
-                    }
-                }
-                break;
-            case headers['content-type'] == 'text/plain' || new RegExp('text\/plain').test(headers['content-type']):
-                finalBody.text = body; //is to string required? maybe yes, if body is a number //seems all text is converted to string by default
-                break;
-            //TO-DO: case to handle form-data
-            default:
-                finalBody.elasticBodyDefault = `Unrecognised or unhandled content-type recived: ${headers['content-type']}`;
+        // switch (true) {
+        //     case (contentType == 'application/json' || new RegExp('application\/json').test(contentType)):
+        //         {
+        //             try {
+        //                 if (body && typeof(body) != "object") throw new Error('Invalid json received');
+        //                 const jsonString = JSON.stringify(body);
+        //                 finalBody.json = body; //convert all keys of body to string recursively? //too much work and might cause cpu load
+        //             } catch (err) {
+        //                 finalBody.elasticBodyDefault = `Invalid json received: ${body}`;
+        //             }
+        //         }
+        //         break;
+        //     case (contentType == 'text/plain' || new RegExp('text\/plain').test(contentType)):
+        //         finalBody.text = body; //is to string required? maybe yes, if body is a number //seems all text is converted to string by default
+        //         break;
+        //     //TO-DO: case to handle form-data
+        //     default:
+        //         finalBody.elasticBodyDefault = `Unrecognized or unhandled content-type received: ${contentType}`;
+        // }
+
+        try {
+            const jsonString = JSON.stringify(body, null, 2);
+            finalBody.elasticBody = jsonString;
+        } catch (err) {
+            finalBody.elasticBodyDefault = `Couldn't parse body: ${body}`;
         }
 
     } catch (err) {
-        // let metadata = {  }; //pass requst params to identify for which req the error came from? Also, will need to set ship to true for this.
+        // let metadata = {  }; //pass request params to identify for which req the error came from? Also, will need to set ship to true for this.
         errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.getLogBody' });
         finalBody.elasticBodyDefault = `Error while parsing body`;
     }
@@ -105,8 +114,8 @@ const morphAccessLogs = ({ type, socket, event, data, req, res, date, dateTime, 
                     },
                     logType: 'accessLogs',
                 };
-                log.request.body = getLogBody(log.request.headers, reqBody, statusCode, 'request');
-                log.response.body = getLogBody(log.request.headers, resBody, statusCode, 'response');
+                log.request.body = getLogBody(log.request.headers, reqBody, statusCode, 'req');
+                log.response.body = getLogBody(log.request.headers, resBody, statusCode, 'res');
 
                 break;
             }

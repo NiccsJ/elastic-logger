@@ -88,7 +88,7 @@ const isObjEmpty = (obj) => {
 
 };
 
-const isLogBodyEnabled = (headers, statusCode, type) => { // TODO: use type and an additional header to conditionally enable either req or res body logging
+const isLogBodyEnabled = (headers, statusCode) => {
     let status = false;
     try {
         const { logbody, skipstatus, includestatus } = headers;
