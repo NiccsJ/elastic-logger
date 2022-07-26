@@ -120,7 +120,6 @@ const overwriteHttpProtocol = async ({ microServiceName, brand_name, cs_env, bat
 
                             req.on('response', (res) => {
                                 if (debug) console.log('\n<><><><> DEBUG <><><><>\nRequest Response \n<><><><> DEBUG <><><><>\n');
-                                console.time('======= start =======');
                                 const { statusCode } = res;
                                 options.statusCode = statusCode;
                                 // if (res.headers && res.headers['content-length']) responseSizeHeaders = Number(res.headers['content-length']);
@@ -144,7 +143,6 @@ const overwriteHttpProtocol = async ({ microServiceName, brand_name, cs_env, bat
                                         chunks.push(Buffer.from(data));
                                     }
                                     responseBody = Buffer.concat(chunks).toString('utf8');
-                                    console.log('RES CHUNK: ', data, 'RES BODY:', responseBody); //disable later
                                 });
 
                                 // res.on('error', (error) => {
@@ -159,7 +157,6 @@ const overwriteHttpProtocol = async ({ microServiceName, brand_name, cs_env, bat
                                     outBoundApiLogger({ requestLogObject, responseLogObject, microServiceName, brand_name, cs_env, batchSize, timezone, ship });
                                     returnFromRequestClose = false;
                                 });
-                                console.timeEnd('======= start =======');
                             });
 
                             req.on('error', (error) => {

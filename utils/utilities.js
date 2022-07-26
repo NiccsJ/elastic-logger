@@ -269,7 +269,6 @@ const patchObjectDotFunctions = (fnType, bodyArray, object, objectType) => { //t
                     const original = object.write;
                     object.write = function () {
                         try {
-                            console.log('<><><> WRITE: <><><>', arguments);
                             bodyArray.push(Buffer.from(arguments[0]));
                             // const body = Buffer.concat(bodyArray).toString('utf8');
                             objectType == 'req' ? object.reqBodytempBuffer = bodyArray : object.reqBodytempBuffer = bodyArray;
@@ -286,10 +285,8 @@ const patchObjectDotFunctions = (fnType, bodyArray, object, objectType) => { //t
                     const original = object.end;
                     object.end = function () {
                         try {
-                            console.log('<><><> END: <><><>', arguments);
                             if (arguments[0]) bodyArray.push(Buffer.from(arguments[0]));
                             const body = Buffer.concat(bodyArray).toString('utf8');
-                            console.log(`<><><> END ${objectType} BODY : <><><>`, body);
                             objectType == 'req' ? object.reqBody = body : object.resBody = body;
                             return original.apply(this, arguments);
                         } catch (err) {
@@ -305,7 +302,6 @@ const patchObjectDotFunctions = (fnType, bodyArray, object, objectType) => { //t
                     const original = object.send;
                     object.send = function (body) {
                         try {
-                            console.log('<><><> SEND: <><><>', arguments, body);
                             objectType == 'req' ? object.reqBody = body : object.resBody = body;
                             return original.apply(this, arguments);
                         } catch (err) {
