@@ -177,7 +177,9 @@ const bulkIndex = async (logs, index) => {
         //handle error
         if (debug) console.log('\n<><><><> DEBUG <><><><>\nbulkResponse: ', bulkResponse, '\n<><><><> DEBUG <><><><>\n');
     } catch (err) {
-        errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.bulkIndex' }); //ship: true? otherwise we won't know if all logs are being shipped or not
+        let metadata = {};
+        // metadata.elasticBulkIndex = err.message;
+        errorHandler({ err, ship: false, metadata, scope: '@niccsj/elastic-logger.bulkIndex' }); //ship: true? otherwise we won't know if all logs are being shipped or not
     }
 };
 

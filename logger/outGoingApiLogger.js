@@ -4,6 +4,24 @@ const { errorHandler, elasticError } = require('../utils/errorHandler');
 const { shipDataToElasticsearch, getLogBody, patchObjectDotFunctions, isObjEmpty } = require('../utils/utilities');
 const { debug } = require('../utils/constants');
 
+const convertAllKeysString = (object) => {
+    const original = object;
+    if (debug) console.log('\n<><><><> DEBUG <><><><>\nObject before: ', original, '\n<><><><> DEBUG <><><><>\n');
+    try {
+        for (header in object) {
+            if (typeof object[header] == 'string') continue;
+            if (typeof object[header] != 'object') {
+                object[header] = object[header].toString();
+            }
+        }
+        if (debug) console.log('\n<><><><> DEBUG <><><><>\nObject after: ', object, '\n<><><><> DEBUG <><><><>\n');
+    } catch(err) {
+        errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.convertAllKeysString' });
+        object = original;
+    }
+    return object;
+};
+
 const generateLogObject = (data, type, error, additionalData) => {
     const logObject = {};
     try {
@@ -18,7 +36,8 @@ const generateLogObject = (data, type, error, additionalData) => {
                     logObject.host = data.host ? data.host : data.hostname;
                     logObject.hostname = data.hostname || '';
                     logObject.port = data.port || null;
-                    logObject.headers = { ...additionalData.requestHeaders } || {};
+                    // logObject.headers = { ...additionalData.requestHeaders } || {};
+                    logObject.headers = convertAllKeysString({ ...additionalData.requestHeaders }) || {};
                     logObject.query = data.query || null;
                     logObject.pathname = data.pathname || '';
                     logObject.path = data.path || '';

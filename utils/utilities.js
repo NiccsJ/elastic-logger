@@ -201,7 +201,7 @@ const isLogBodyEnabled = (headers, statusCode) => {
                         if (debug) console.log('<><><> INCLUDE <><><>', statusCode, includeStatusArray, skipStatusArray);
                         status = true;
                     }
-                    if (!skipStatusArray?.includes(statusCode)) {
+                    if (!(skipStatusArray ? skipStatusArray?.includes(statusCode) : true)) {
                         if (debug) console.log('<><><> SKIP <><><>', statusCode, includeStatusArray, skipStatusArray);
                         status = true;
                     }
