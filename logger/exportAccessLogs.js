@@ -1,28 +1,7 @@
 const momentTimezone = require('moment-timezone');
-const { shipDataToElasticsearch, isObjEmpty, isLogBodyEnabled } = require('../utils/utilities');
+const { shipDataToElasticsearch, getLogBody, patchObjectDotFunctions } = require('../utils/utilities');
 const { errorHandler, elasticError } = require('../utils/errorHandler');
 const { defaultInitializationValues, defaultSocketEventsToListen, debug } = require('../utils/constants');
-
-const patchResDotSend = (response) => {
-    try {
-        const original = response.send;
-        // return function(body) {
-        response.send = function (body) {
-            try {
-                console.log('<><><> SEND: <><><>', arguments, body);
-                response.resBody = body;
-                original.apply(this, arguments);
-            } catch (err) {
-                errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.patchResDotSend.function' });
-                original.apply(this, arguments);
-            }
-        };
-    } catch (err) {
-        errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.patchResDotSend' });
-        response.send = original;
-        // return original;
-    }
-};
 
 const adapterLogBody = (client) => {
     try {
@@ -38,58 +17,14 @@ const adapterLogBody = (client) => {
     }
 };
 
-const getLogBody = (reqHeaders, body, statusCode, type = 'req') => { //type not being used for now
-    let finalBody = {};
-    try {
-        if (!body || isObjEmpty(body)) return finalBody = { elasticBodyDefault: 'body not found in the request' };
-        if (!reqHeaders || isObjEmpty(reqHeaders)) return finalBody = { elasticBodyDefault: 'headers not found in the request' };
-        if (!isLogBodyEnabled(reqHeaders, statusCode)) return finalBody = { elasticBodyDefault: 'body logging not enabled for this request' };
-
-        // const contentType = type == 'res' ? resHeaders['content-type'] : reqHeaders['content-type'];
-
-        // switch (true) {
-        //     case (contentType == 'application/json' || new RegExp('application\/json').test(contentType)):
-        //         {
-        //             try {
-        //                 if (body && typeof(body) != "object") throw new Error('Invalid json received');
-        //                 const jsonString = JSON.stringify(body);
-        //                 finalBody.json = body; //convert all keys of body to string recursively? //too much work and might cause cpu load
-        //             } catch (err) {
-        //                 finalBody.elasticBodyDefault = `Invalid json received: ${body}`;
-        //             }
-        //         }
-        //         break;
-        //     case (contentType == 'text/plain' || new RegExp('text\/plain').test(contentType)):
-        //         finalBody.text = body; //is to string required? maybe yes, if body is a number //seems all text is converted to string by default
-        //         break;
-        //     //TO-DO: case to handle form-data
-        //     default:
-        //         finalBody.elasticBodyDefault = `Unrecognized or unhandled content-type received: ${contentType}`;
-        // }
-
-        try {
-            const jsonString = JSON.stringify(body, null, 2);
-            finalBody.elasticBody = jsonString;
-        } catch (err) {
-            finalBody.elasticBodyDefault = `Couldn't parse body: ${body}`;
-        }
-
-    } catch (err) {
-        // let metadata = {  }; //pass request params to identify for which req the error came from? Also, will need to set ship to true for this.
-        errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.getLogBody' });
-        finalBody.elasticBodyDefault = `Error while parsing body`;
-    }
-    return finalBody;
-};
-
 const morphAccessLogs = ({ type, socket, event, data, req, res, date, dateTime, requestStart, microServiceName }) => {
     let log = {};
     try {
         switch (type) {
             case 'http-access': {
-                const { headers, httpVersion, method, socket, url, originalUrl, body: reqBody } = req;
+                const { headers, httpVersion, method, socket, url, originalUrl, body: reqBody } = req; //IncomingMessage (ClientRequest)
                 const { remoteAddress, remoteFamily } = socket;
-                const { resBody, statusCode, statusMessage } = res;
+                const { resBody, statusCode, statusMessage } = res; //OutgoingMessage (ServerResponse)
                 const resHeaders = res.getHeaders();
 
                 const processingTime = Date.now() - requestStart;
@@ -171,29 +106,11 @@ const exportAccessLogs = ({ microServiceName, brand_name, cs_env, batchSize, tim
     return (req, res, next) => {
         try {
             const requestStart = Date.now();
-            // res.send = patchResDotSend(res);
-            patchResDotSend(res);
+            // patchObjectDotFunctions('send', null, res, 'res');
 
-            /* //second approach
-            // const originalWrite = res.write;
-            // const originalEnd = res.end;
-
-            // const chunks = [];
-            // res.write = (chunk, ...args) => {
-            //     console.log('<><><> WRITE: <><><>', chunk, args);
-            //     chunks.push(chunk);
-            //     return originalWrite.apply(res, [chunk, ...args]);
-            // };
-
-            // res.end = (chunk, ...args) => {
-            //     console.log('<><><> END: <><><>', chunk, args);
-            //     if (chunk) chunks.push(Buffer.from(chunk));
-            //     const body = Buffer.concat(chunks).toString('utf8');
-            //     console.log('REQ PATH: ', req.path, 'RES BODY :', body);
-            //     res.resBody = body;
-            //     return originalEnd.apply(res, [chunk, ...args]);
-            // };
-            */
+            const bodyArray = [];
+            patchObjectDotFunctions('write', bodyArray, res, 'res');
+            patchObjectDotFunctions('end', bodyArray, res, 'res');
 
             res.on('finish', () => {
                 try {

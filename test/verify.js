@@ -91,3 +91,84 @@
 //     console.log('log after adding meta----------->', log);
 //     console.log('\n\n\n');
 // }, 5000);
+
+
+//old monkey patch for http/https
+
+                        /*
+                        // const requestStart = Date.now();
+                        // function newCallback() {
+                        //     try {
+                        //         console.log('\n\n\n\n\n\n\n\n\n\n\n<><><> REQ response callback <><><>\n\n\n\n\n\n\n\n\n\n\n');
+                        //         let responseBody;
+                        //         let responseSize = -1;
+                        //         const requestLogObject = {};
+                        //         const responseLogObject = {};
+                        //         const req = arguments[0].req; //OutgoingMessage (ClientRequest)
+                        //         const res = arguments[0]; //IncomingMessage (ServerResponse)
+                        //         // console.log('<><><> ARGUMENTS <><><>', req);
+
+                        //         const ipPorts = urls.map(url => { return url.split("//")[1] });
+                        //         const ips = ipPorts.map(ipPort => { return ipPort.split(":")[0] });
+                        //         const hostname = (options && options.href) ? options.href : (options && options.hostname) ? options.hostname : null;
+                        //         console.time('======= start =======');
+                        //         if (hostname && !ips.includes(hostname)) {
+                        //             if (debug) console.log('\n<><><><> DEBUG <><><><>\nRequest Hostname: ', hostname, '\nElastic-Kibana IPs/URLs: ', ips, '\n<><><><> DEBUG <><><><>\n');
+                        //             // if (res.headers && res.headers['content-length']) {
+                        //             //     responseSize = Number(res.headers['content-length']);
+                        //             // } else {
+                        //                 const chunks = [];
+                        //                 res.on('data', (data) => {
+                        //                     try {
+                        //                         console.log('<><><> RES DATA <><><>');
+                        //                         // if (data && Buffer.isBuffer(data)) {
+                        //                         if (data) {
+                        //                             responseSize += data.length;
+                        //                             chunks.push(Buffer.from(data));
+                        //                             delete data;
+                        //                         }
+                        //                     } catch (err) {
+
+                        //                     }
+                        //                 });
+                        //                 res.on('end', (data) => {
+                        //                     try {
+                        //                         console.log('<><><> RES END <><><>');
+                        //                         // if (data && Buffer.isBuffer(data)) {
+                        //                         if (data) {
+                        //                             chunks.push(Buffer.from(data));
+                        //                         }
+                        //                         responseBody = Buffer.concat(chunks).toString('utf8');
+                        //                         console.log('RES CHUNK: ', data, 'RES BODY:', responseBody);
+                        //                     } catch (err) {
+
+                        //                     }
+                        //                 });
+                        //             // }
+
+                        //             res.on('close', () => {
+                        //                 requestLogObject.href = options.href ? options.href : options.hostname + options.path;
+                        //                 requestLogObject.protocol = options?.protocol || '';
+                        //                 requestLogObject.headers = options.headers ? options.headers : {};
+                        //                 requestLogObject.method = options.method ? options.method : '';
+                        //                 requestLogObject.requestStart = requestStart;
+
+                        //                 responseLogObject.headers = res.headers;
+                        //                 responseLogObject.statusCode = res.statusCode;
+                        //                 responseLogObject.responseSize = responseSize;
+                        //                 // responseLogObject.body = getLogBody(requestLogObject.headers, null, responseLogObject.statusCode);
+                        //                 //skip when headers contain transfer-encoding: 'chunked'
+                        //                 // outBoundApiLogger({ requestLogObject, responseLogObject, microServiceName, brand_name, cs_env, batchSize, timezone, ship });
+                        //             });
+
+                        //         }
+                        //         console.timeEnd('======= start =======');
+                        //         if (callback) {
+                        //             callback.apply(this, arguments);
+                        //         }
+                        //     } catch (err) {
+                        //         errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.overwriteHttpProtocol.patch.object.request.newCallback' });
+                        //     }
+                        // };
+                        // const req = original(options, newCallback);
+                        */

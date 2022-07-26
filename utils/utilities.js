@@ -77,52 +77,6 @@ const getCloudMetadata = async (cloudType) => {
 
 if (enableCloudMetadata) getCloudMetadata(cloudType);
 
-const isObjEmpty = (obj) => {
-    try {
-        for (let key in obj) { if (obj.hasOwnProperty(key)) return false; }
-        return true;
-    } catch (err) {
-        errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.isObjEmpty' });
-        return true;
-    }
-
-};
-
-const isLogBodyEnabled = (headers, statusCode) => {
-    let status = false;
-    try {
-        const { logbody, skipstatus, includestatus } = headers;
-        if (!logbody) return status;
-        if (logbody.toString() == 'true') {
-            if (skipstatus || includestatus) {
-                statusCode = statusCode?.toString();
-                const skipStatusArray = skipstatus?.split(',').map(s => s?.trim());
-                const includeStatusArray = includestatus?.split(',').map(s => s?.trim());
-
-                if (debug) console.log('\n<><><><> DEBUG <><><><>\nskipStatusArray: ', skipStatusArray, '\n<><><><> DEBUG <><><><>\n');
-                if (debug) console.log('\n<><><><> DEBUG <><><><>\nincludeStatusArray: ', includeStatusArray, '\n<><><><> DEBUG <><><><>\n');
-
-                if (Array.isArray(skipStatusArray) || Array.isArray(includeStatusArray)) {
-                    if (includeStatusArray?.includes(statusCode)) {
-                        if (debug) console.log('<><><> INCLUDE <><><>', statusCode, includeStatusArray, skipStatusArray);
-                        status = true;
-                    }
-                    if (!skipStatusArray?.includes(statusCode)) {
-                        if (debug) console.log('<><><> SKIP <><><>', statusCode, includeStatusArray, skipStatusArray);
-                        status = true;
-                    }
-                }
-            } else {
-                status = true;
-            }
-        }
-    } catch (err) {
-        status = false;
-        errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.isLogBodyEnabled' }); //should ship be true? //no, will create too much traffic in error logs
-    }
-    return status;
-};
-
 const checkSuppliedArguments = async ({ err, esConnObj, microServiceName, brand_name, cs_env, batchSize, timezone, exporterType }, argCheckCount = 0) => {
     try {
         if (debug) console.log('\n<><><><> DEBUG <><><><>\ncheckSuppliedArguments: ', 'exporterType: ', exporterType, '\n<><><><> DEBUG <><><><>\n');
@@ -217,9 +171,162 @@ const shipDataToElasticsearch = async ({ log, esConnObj, microServiceName, brand
     }
 };
 
+const isObjEmpty = (obj) => {
+    try {
+        for (let key in obj) { if (obj.hasOwnProperty(key)) return false; }
+        return true;
+    } catch (err) {
+        errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.isObjEmpty' });
+        return true;
+    }
+
+};
+
+const isLogBodyEnabled = (headers, statusCode) => {
+    let status = false;
+    try {
+        const { logbody, skipstatus, includestatus } = headers;
+        if (!logbody) return status;
+        if (logbody.toString() == 'true') {
+            if (skipstatus || includestatus) {
+                statusCode = statusCode?.toString();
+                const skipStatusArray = skipstatus?.split(',').map(s => s?.trim());
+                const includeStatusArray = includestatus?.split(',').map(s => s?.trim());
+
+                if (debug) console.log('\n<><><><> DEBUG <><><><>\nskipStatusArray: ', skipStatusArray, '\n<><><><> DEBUG <><><><>\n');
+                if (debug) console.log('\n<><><><> DEBUG <><><><>\nincludeStatusArray: ', includeStatusArray, '\n<><><><> DEBUG <><><><>\n');
+
+                if (Array.isArray(skipStatusArray) || Array.isArray(includeStatusArray)) {
+                    if (includeStatusArray?.includes(statusCode)) {
+                        if (debug) console.log('<><><> INCLUDE <><><>', statusCode, includeStatusArray, skipStatusArray);
+                        status = true;
+                    }
+                    if (!skipStatusArray?.includes(statusCode)) {
+                        if (debug) console.log('<><><> SKIP <><><>', statusCode, includeStatusArray, skipStatusArray);
+                        status = true;
+                    }
+                }
+            } else {
+                status = true;
+            }
+        }
+    } catch (err) {
+        status = false;
+        errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.isLogBodyEnabled' }); //should ship be true? //no, will create too much traffic in error logs
+    }
+    return status;
+};
+
+const getLogBody = (reqHeaders, body, statusCode, type = 'req') => { //type not being used for now
+    let finalBody = {};
+    try {
+        if (!body || isObjEmpty(body)) return finalBody = { elasticBodyDefault: 'body not found in the request' };
+        if (!reqHeaders || isObjEmpty(reqHeaders)) return finalBody = { elasticBodyDefault: 'headers not found in the request' };
+        if (!isLogBodyEnabled(reqHeaders, statusCode)) return finalBody = { elasticBodyDefault: 'body logging not enabled for this request' };
+
+        // const contentType = type == 'res' ? resHeaders['content-type'] : reqHeaders['content-type'];
+
+        // switch (true) {
+        //     case (contentType == 'application/json' || new RegExp('application\/json').test(contentType)):
+        //         {
+        //             try {
+        //                 if (body && typeof(body) != "object") throw new Error('Invalid json received');
+        //                 const jsonString = JSON.stringify(body);
+        //                 finalBody.json = body; //convert all keys of body to string recursively? //too much work and might cause cpu load
+        //             } catch (err) {
+        //                 finalBody.elasticBodyDefault = `Invalid json received: ${body}`;
+        //             }
+        //         }
+        //         break;
+        //     case (contentType == 'text/plain' || new RegExp('text\/plain').test(contentType)):
+        //         finalBody.text = body; //is to string required? maybe yes, if body is a number //seems all text is converted to string by default
+        //         break;
+        //     //TO-DO: case to handle form-data
+        //     default:
+        //         finalBody.elasticBodyDefault = `Unrecognized or unhandled content-type received: ${contentType}`;
+        // }
+
+        try {
+            const jsonString = JSON.stringify(body, null, 2);
+            finalBody.elasticBody = jsonString;
+        } catch (err) {
+            finalBody.elasticBodyDefault = `Couldn't parse body: ${body}`;
+        }
+
+    } catch (err) {
+        // let metadata = {  }; //pass request params to identify for which req the error came from? Also, will need to set ship to true for this.
+        errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.getLogBody' });
+        finalBody.elasticBodyDefault = `Error while parsing body`;
+    }
+    return finalBody;
+};
+
+const patchObjectDotFunctions = (fnType, bodyArray, object, objectType) => { //todo: add configurable limit on body size
+    try {
+        switch (fnType) {
+            case 'write':
+                {
+                    const original = object.write;
+                    object.write = function () {
+                        try {
+                            console.log('<><><> WRITE: <><><>', arguments);
+                            bodyArray.push(Buffer.from(arguments[0]));
+                            // const body = Buffer.concat(bodyArray).toString('utf8');
+                            objectType == 'req' ? object.reqBodytempBuffer = bodyArray : object.reqBodytempBuffer = bodyArray;
+                            return original.apply(this, arguments);
+                        } catch (err) {
+                            errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.patchObjectDotFunctions.case.write' });
+                            return original.apply(this, arguments);
+                        }
+                    };
+                    break;
+                }
+            case 'end':
+                {
+                    const original = object.end;
+                    object.end = function () {
+                        try {
+                            console.log('<><><> END: <><><>', arguments);
+                            if (arguments[0]) bodyArray.push(Buffer.from(arguments[0]));
+                            const body = Buffer.concat(bodyArray).toString('utf8');
+                            console.log(`<><><> END ${objectType} BODY : <><><>`, body);
+                            objectType == 'req' ? object.reqBody = body : object.resBody = body;
+                            return original.apply(this, arguments);
+                        } catch (err) {
+                            errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.patchObjectDotFunctions.case.end' });
+                            return original.apply(this, arguments);
+                        }
+                    };
+                    break;
+                }
+            case 'send':
+                {
+                    // if (typeof object != '') return;
+                    const original = object.send;
+                    object.send = function (body) {
+                        try {
+                            console.log('<><><> SEND: <><><>', arguments, body);
+                            objectType == 'req' ? object.reqBody = body : object.resBody = body;
+                            return original.apply(this, arguments);
+                        } catch (err) {
+                            errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.patchObjectDotFunctions.case.send' });
+                            return original.apply(this, arguments);
+                        }
+                    };
+                }
+            default:
+                throw new elasticError({});
+        };
+    } catch (err) {
+        errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.patchObjectDotFunctions' });
+    }
+};
+
 module.exports = {
     checkSuppliedArguments,
     shipDataToElasticsearch,
     isObjEmpty,
-    isLogBodyEnabled
+    isLogBodyEnabled,
+    getLogBody,
+    patchObjectDotFunctions
 };
