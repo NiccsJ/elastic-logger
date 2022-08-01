@@ -43,7 +43,7 @@ const connection = async (esConnObj) => {
  *
  */
 
-const initializeElasticLogger = async ({ esConnObj, brand_name, cs_env, microServiceName, batchSize, timezone, ilmObject = {}, indexSettings = {}, exportApiLogs = true, ship = true }) => {
+const initializeElasticLogger = async ({ esConnObj, brand_name, cs_env, microServiceName, batchSize, timezone, ilmObject = {}, indexSettings = {}, maxHttpLogBodyLength, exportApiLogs = true, ship = true }) => {
 	try {
 		let { size, hotDuration, warmAfter, deleteAfter, shrinkShards, overwriteILM } = ilmObject;
 		let { primaryShards, replicaShards, priority, overwrite } = indexSettings;
@@ -59,6 +59,7 @@ const initializeElasticLogger = async ({ esConnObj, brand_name, cs_env, microSer
 		microServiceName = microServiceName ? microServiceName : defaultInitializationValues.microServiceName;
 		batchSize = batchSize ? batchSize : defaultInitializationValues.batchSize;
 		timezone = timezone ? timezone : defaultInitializationValues.timezone;
+		maxHttpLogBodyLength = maxHttpLogBodyLength ?? defaultInitializationValues.maxHttpLogBodyLength;
 
 		//setup values/defaults from index template
 		primaryShards = primaryShards ? primaryShards : defaultIndexTemplateValues.number_of_shards;
@@ -81,7 +82,7 @@ const initializeElasticLogger = async ({ esConnObj, brand_name, cs_env, microSer
 		if (initializerValid) {
 			if (esClientObj && !esClientObj.client) esClientObj.client = await connection(esConnObj);
 			esClientObj.status = true;
-			esClientObj.defaultLoggerDetails = { esConnObj, brand_name, cs_env, microServiceName, batchSize, timezone };
+			esClientObj.defaultLoggerDetails = { esConnObj, brand_name, cs_env, microServiceName, batchSize, timezone, maxHttpLogBodyLength };
 			console.log('-----------------------ELASTIC-LOGGER INITIALIZED-----------------------');
 			if (debug) console.log('\n<><><><> DEBUG <><><><>\nES CLIENT OBJ DEFAULT LOGGER DETAILS: ', JSON.stringify(esClientObj.defaultLoggerDetails, null, 4), '\n<><><><> DEBUG <><><><>\n');
 
@@ -95,7 +96,7 @@ const initializeElasticLogger = async ({ esConnObj, brand_name, cs_env, microSer
 			putDefaultComponetTemplate({ componentTemplateName: "common_dynamic_template_component_template", mappings: dynamicMappings, overwriteMappings: false });
 			putDefaultComponetTemplate({ componentTemplateName: "common_metadata_component_template", mappings: metadataMappings, overwriteMappings });
 			putIndexTemplate({ brand_name, cs_env, microServiceName, primaryShards, replicaShards, priority, overwrite, dynamicMappings, metadataMappings, overwriteMappings });
-			if (exportApiLogs) overwriteHttpProtocol({ microServiceName, brand_name, cs_env, batchSize, timezone, elasticUrl, kibanaUrl, ship });
+			if (exportApiLogs) overwriteHttpProtocol({ microServiceName, brand_name, cs_env, batchSize, timezone, maxHttpLogBodyLength, elasticUrl, kibanaUrl, ship });
 			return true;
 		}
 	} catch (err) {

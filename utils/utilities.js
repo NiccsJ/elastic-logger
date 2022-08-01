@@ -95,6 +95,8 @@ const checkSuppliedArguments = async ({ err, esConnObj, microServiceName, brand_
             newDefaultLogger.brand_name = (defaultLoggerDetails && defaultLoggerDetails.brand_name) ? defaultLoggerDetails.brand_name : defaultInitializationValues.brand_name;
             newDefaultLogger.cs_env = (defaultLoggerDetails && defaultLoggerDetails.cs_env) ? defaultLoggerDetails.cs_env : defaultInitializationValues.cs_env;
             newDefaultLogger.timezone = (defaultLoggerDetails && defaultLoggerDetails.timezone) ? defaultLoggerDetails.timezone : defaultInitializationValues.timezone;
+            // newDefaultLogger.maxHttpLogBodyLength = (defaultLoggerDetails && defaultLoggerDetails.maxHttpLogBodyLength) ? defaultLoggerDetails.maxHttpLogBodyLength : defaultInitializationValues.maxHttpLogBodyLength;
+
             defaultLoggerDetails = { ...newDefaultLogger };
             newDefaultLogger.err = err;
             newDefaultLogger.exporterType = exporterType;
@@ -113,7 +115,7 @@ const checkSuppliedArguments = async ({ err, esConnObj, microServiceName, brand_
         //     argsValid = true;
         // }
         else {
-            if (debug) console.log('\n<><><><> DEBUG <><><><>\nARGS NOT MISSING: ', JSON.stringify(suppliedArgs, null, 4), '\n<><><><> DEBUG <><><><>\n');
+            // if (debug) console.log('\n<><><><> DEBUG <><><><>\nARGS NOT MISSING: ', JSON.stringify(suppliedArgs, null, 4), '\n<><><><> DEBUG <><><><>\n');
             if ((esConnObj && !(esConnObj.authType == 'none' || esConnObj.authType == 'basic' || esConnObj.authType == 'api'))) {
                 throw new elasticError({ name: 'Argument(s) validation error:', message: `Invalid authType specified: '${esConnObj.authType}'. Allowed values are: 'none', 'basic', 'api'.`, type: 'elastic-logger', status: 998 });
             } else if (esConnObj && (esConnObj.authType == 'basic' || esConnObj.authType == 'api')) {
@@ -185,9 +187,11 @@ const isObjEmpty = (obj) => {
 const isLogBodyEnabled = (headers, statusCode) => {
     let status = false;
     try {
+        if (debug) console.log('\n<><><><> DEBUG <><><><>\nstatusCode: ', statusCode, '\n<><><><> DEBUG <><><><>\n');
         const { logbody, skipstatus, includestatus } = headers;
         if (!logbody) return status;
         if (logbody.toString() == 'true') {
+            if (statusCode == true) return status = true; //to enable body logging in case of req.error
             if (skipstatus || includestatus) {
                 statusCode = statusCode?.toString();
                 const skipStatusArray = skipstatus?.split(',').map(s => s?.trim());
@@ -224,28 +228,6 @@ const getLogBody = (reqHeaders, body, statusCode, type = 'req') => { //type not 
         if (!reqHeaders || isObjEmpty(reqHeaders)) return finalBody = { elasticBodyDefault: 'headers not found in the request' };
         if (!isLogBodyEnabled(reqHeaders, statusCode)) return finalBody = { elasticBodyDefault: 'body logging not enabled for this request' };
 
-        // const contentType = type == 'res' ? resHeaders['content-type'] : reqHeaders['content-type'];
-
-        // switch (true) {
-        //     case (contentType == 'application/json' || new RegExp('application\/json').test(contentType)):
-        //         {
-        //             try {
-        //                 if (body && typeof(body) != "object") throw new Error('Invalid json received');
-        //                 const jsonString = JSON.stringify(body);
-        //                 finalBody.json = body; //convert all keys of body to string recursively? //too much work and might cause cpu load
-        //             } catch (err) {
-        //                 finalBody.elasticBodyDefault = `Invalid json received: ${body}`;
-        //             }
-        //         }
-        //         break;
-        //     case (contentType == 'text/plain' || new RegExp('text\/plain').test(contentType)):
-        //         finalBody.text = body; //is to string required? maybe yes, if body is a number //seems all text is converted to string by default
-        //         break;
-        //     //TO-DO: case to handle form-data
-        //     default:
-        //         finalBody.elasticBodyDefault = `Unrecognized or unhandled content-type received: ${contentType}`;
-        // }
-
         try {
             const jsonString = JSON.stringify(body, null, 2);
             finalBody.elasticBody = jsonString;
@@ -261,17 +243,60 @@ const getLogBody = (reqHeaders, body, statusCode, type = 'req') => { //type not 
     return finalBody;
 };
 
-const patchObjectDotFunctions = (fnType, bodyArray, object, objectType) => { //todo: add configurable limit on body size
+const assembleChunks = (object, objectType, array, chunk = null, assembleBody = false, maxHttpLogBodyLength = 0) => {
     try {
+        if (maxHttpLogBodyLength > 1024 * 1024) maxHttpLogBodyLength = 1024 * 1024; //MAX limit at 1MB
+        if (maxHttpLogBodyLength == 0) maxHttpLogBodyLength = 1024 * 1024; //MAX limit at 1MB
+
+        if (debug) console.log('\n<><><><> DEBUG <><><><>\nobjectType: ', objectType, ' maxHttpLogBodyLength: ', maxHttpLogBodyLength, '\n<><><><> DEBUG <><><><>\n');
+
+        let chunkBuffer;
+        let bodySize = object.bodySize || 0;
+        let bodyByteLength = object.bodyByteLength || 0;
+        object.truncated = object.truncated ?? false;
+
+        if (bodySize < maxHttpLogBodyLength) {
+            if (chunk) {
+                chunkBuffer = Buffer.from(chunk);
+                bodySize += chunk.length;
+                bodyByteLength += chunkBuffer.byteLength;
+                array.push(chunkBuffer);
+            }
+        } else {
+            object.truncated = true;
+            bodySize = maxHttpLogBodyLength;
+        }
+
+        // if (assembleBody) { //end
+            const body = Buffer.concat(array, bodySize < maxHttpLogBodyLength ? bodySize : maxHttpLogBodyLength).toString('utf8');
+            objectType == 'req' ? object.reqBody = body : object.resBody = body;
+        // } else { //data or write
+            // object.bodytempBuffer = array;
+        // }
+
+        object.bodySize = bodySize;
+        object.bodyByteLength = bodyByteLength;
+        object.maxHttpLogBodyLength = maxHttpLogBodyLength;
+
+    } catch(err){
+        errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.assembleChunks' });
+        const errorBody = `error while assembling body chunks: ${err}`
+        objectType == 'req' ? object.reqBody = errorBody : object.resBody = errorBody;
+    }
+    return;
+};
+
+const patchObjectDotFunctions = (fnType, bodyArray, object, objectType, maxHttpLogBodyLength = 0) => { //todo: add configurable limit on body size
+    try {
+        maxHttpLogBodyLength = maxHttpLogBodyLength ? maxHttpLogBodyLength : (defaultLoggerDetails?.maxHttpLogBodyLength || defaultInitializationValues.maxHttpLogBodyLength);
+        // if (debug) console.log('\n<><><><> DEBUG <><><><>\nobjectType: ', objectType, '  maxHttpLogBodyLength: ', maxHttpLogBodyLength, '\n<><><><> DEBUG <><><><>\n');
         switch (fnType) {
             case 'write':
                 {
                     const original = object.write;
                     object.write = function () {
                         try {
-                            bodyArray.push(Buffer.from(arguments[0]));
-                            // const body = Buffer.concat(bodyArray).toString('utf8');
-                            objectType == 'req' ? object.reqBodytempBuffer = bodyArray : object.reqBodytempBuffer = bodyArray;
+                            assembleChunks(object, objectType, bodyArray, arguments[0], false, maxHttpLogBodyLength);
                             return original.apply(this, arguments);
                         } catch (err) {
                             errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.patchObjectDotFunctions.case.write' });
@@ -285,9 +310,7 @@ const patchObjectDotFunctions = (fnType, bodyArray, object, objectType) => { //t
                     const original = object.end;
                     object.end = function () {
                         try {
-                            if (arguments[0]) bodyArray.push(Buffer.from(arguments[0]));
-                            const body = Buffer.concat(bodyArray).toString('utf8');
-                            objectType == 'req' ? object.reqBody = body : object.resBody = body;
+                            assembleChunks(object, objectType, bodyArray, arguments[0], true, maxHttpLogBodyLength);
                             return original.apply(this, arguments);
                         } catch (err) {
                             errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.patchObjectDotFunctions.case.end' });
@@ -298,7 +321,6 @@ const patchObjectDotFunctions = (fnType, bodyArray, object, objectType) => { //t
                 }
             case 'send':
                 {
-                    // if (typeof object != '') return;
                     const original = object.send;
                     object.send = function (body) {
                         try {
@@ -311,7 +333,7 @@ const patchObjectDotFunctions = (fnType, bodyArray, object, objectType) => { //t
                     };
                 }
             default:
-                throw new elasticError({});
+                throw new elasticError({}); //set this to apt value
         };
     } catch (err) {
         errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.patchObjectDotFunctions' });
@@ -324,5 +346,6 @@ module.exports = {
     isObjEmpty,
     isLogBodyEnabled,
     getLogBody,
+    assembleChunks,
     patchObjectDotFunctions
 };

@@ -32,6 +32,7 @@ const DEFAULT_AWS_METADATA_OBJECT = {
         'hostname': 'not-ready'
     }
 };
+
 /*
 Default Values
 */
@@ -58,6 +59,7 @@ const defaultInitializationValues = {
     microServiceName: process.env.MS_NAME ? process.env.MS_NAME : 'default',
     batchSize: 100,
     timezone: 'Asia/Calcutta',
+    maxHttpLogBodyLength: 100 * 1024 //default 100KB
 };
 
 const defaultIndexTemplateValues = {

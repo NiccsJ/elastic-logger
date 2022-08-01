@@ -49,6 +49,4 @@ const sendRequest = async ({ apiEndpoint, method, queryParams = null, postData =
     }
 };
 
-module.exports = { 
-    sendRequest
-};
+module.exports = { sendRequest };

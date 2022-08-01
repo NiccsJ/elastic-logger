@@ -17,19 +17,21 @@ const adapterLogBody = (client) => {
     }
 };
 
-const morphAccessLogs = ({ type, socket, event, data, req, res, date, dateTime, requestStart, microServiceName }) => {
+const morphAccessLogs = ({ type, socket, event, data, req, res, date, dateTime, requestStart, microServiceName, maxHttpLogBodyLength }) => {
     let log = {};
     try {
         switch (type) {
             case 'http-access': {
                 const { headers, httpVersion, method, socket, url, originalUrl, body: reqBody } = req; //IncomingMessage (ClientRequest)
                 const { remoteAddress, remoteFamily } = socket;
-                const { resBody, statusCode, statusMessage } = res; //OutgoingMessage (ServerResponse)
+                const { resBody, statusCode, statusMessage, bodySize: responseSize } = res; //OutgoingMessage (ServerResponse)
                 const resHeaders = res.getHeaders();
+                const requestSize = reqBody?.length || null;
 
                 const processingTime = Date.now() - requestStart;
                 log = {
                     url: (url == '/') ? originalUrl : url,
+                    httpVersion,
                     method,
                     headers,
                     remoteAddress,
@@ -37,15 +39,19 @@ const morphAccessLogs = ({ type, socket, event, data, req, res, date, dateTime, 
                     statusCode,
                     statusMessage,
                     processingTime,
+                    requestSize,
+                    responseSize,
                     request: {
                         url: (url == '/') ? originalUrl : url,
                         method,
                         headers,
+                        requestSize
                     },
                     response: {
                         headers: resHeaders ? { ...resHeaders } : {},
                         statusCode,
                         statusMessage,
+                        responseSize
                     },
                     logType: 'accessLogs',
                 };
@@ -102,21 +108,21 @@ const morphAccessLogs = ({ type, socket, event, data, req, res, date, dateTime, 
  *
  */
 
-const exportAccessLogs = ({ microServiceName, brand_name, cs_env, batchSize, timezone = 'Asia/Calcutta', ship = true }) => {
+const exportAccessLogs = ({ microServiceName, brand_name, cs_env, batchSize, timezone = 'Asia/Calcutta', maxHttpLogBodyLength, ship = true }) => {
     return (req, res, next) => {
         try {
             const requestStart = Date.now();
             // patchObjectDotFunctions('send', null, res, 'res');
 
             const bodyArray = [];
-            patchObjectDotFunctions('write', bodyArray, res, 'res');
-            patchObjectDotFunctions('end', bodyArray, res, 'res');
+            patchObjectDotFunctions('write', bodyArray, res, 'res', maxHttpLogBodyLength);
+            patchObjectDotFunctions('end', bodyArray, res, 'res', maxHttpLogBodyLength);
 
             res.on('finish', () => {
                 try {
                     const date = momentTimezone().tz(timezone).startOf('day').format('YYYY-MM-DD');
                     const dateTime = momentTimezone().tz(timezone).format();
-                    const log = morphAccessLogs({ type: 'http-access', req, res, date, dateTime, requestStart, microServiceName });
+                    const log = morphAccessLogs({ type: 'http-access', req, res, date, dateTime, requestStart, microServiceName, maxHttpLogBodyLength });
                     if (debug) console.log('\n<><><><> DEBUG <><><><>\nAccessLog: ', JSON.stringify(log, null, 4), '\n<><><><> DEBUG <><><><>\n');
                     if (ship) shipDataToElasticsearch({ log, microServiceName, brand_name, cs_env, batchSize, timezone, exporterType: 'access' });
                 } catch (err) {
@@ -196,6 +202,7 @@ module.exports = {
 
 /*
 Referrences
+https://www.moesif.com/blog/technical/logging/How-we-built-a-Nodejs-Middleware-to-Log-HTTP-API-Requests-and-Responses/
 https://thewebdev.info/2022/03/06/how-to-log-the-response-body-with-express/
 https://stackoverflow.com/questions/19215042/express-logging-response-body
 */
