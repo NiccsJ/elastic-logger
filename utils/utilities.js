@@ -132,7 +132,6 @@ const checkSuppliedArguments = async ({ err, esConnObj, microServiceName, brand_
         if (exporterType === 'initializer') initializerValid = argsValid;
         return argsValid;
     } catch (err) {
-        // throw(err);
         errorHandler({ err, ship: false, self: true, scope: '@niccsj/elastic-logger.checkSuppliedArguments' });
     }
 };
@@ -289,7 +288,6 @@ const assembleChunks = (object, objectType, array, chunk = null, assembleBody = 
 const patchObjectDotFunctions = (fnType, bodyArray, object, objectType, maxHttpLogBodyLength = 0) => { //todo: add configurable limit on body size
     try {
         maxHttpLogBodyLength = maxHttpLogBodyLength ? maxHttpLogBodyLength : (defaultLoggerDetails?.maxHttpLogBodyLength || defaultInitializationValues.maxHttpLogBodyLength);
-        // if (debug) console.log('\n<><><><> DEBUG <><><><>\nobjectType: ', objectType, '  maxHttpLogBodyLength: ', maxHttpLogBodyLength, '\n<><><><> DEBUG <><><><>\n');
         switch (fnType) {
             case 'write':
                 {
