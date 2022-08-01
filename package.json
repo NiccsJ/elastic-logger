@@ -17,5 +17,8 @@
         "dotenv": "^5.0.1",
         "json-stringify-safe": "^5.0.1",
         "moment-timezone": "^0.5.33"
+    },
+    "devDependencies": {
+        "generate-changelog": "^1.8.0"
     }
 }
