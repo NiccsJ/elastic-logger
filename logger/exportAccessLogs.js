@@ -17,17 +17,15 @@ const adapterLogBody = (client) => {
     }
 };
 
-const morphAccessLogs = ({ type, socket, event, data, req, res, date, dateTime, requestStart, microServiceName, maxHttpLogBodyLength }) => {
+const morphAccessLogs = ({ type, socket, event, data, req, res, date, dateTime, requestStart, microServiceName }) => {
     let log = {};
     try {
         switch (type) {
             case 'http-access': {
-                const { headers, httpVersion, method, socket, url, originalUrl, body: reqBody } = req; //IncomingMessage (ClientRequest)
+                const { headers, httpVersion, method, socket, url, originalUrl, bodySize: requestSize, reqBody, maxHttpLogBodyLength: reqMaxBodySize, truncated: reqTruncated } = req; //IncomingMessage (ClientRequest)
                 const { remoteAddress, remoteFamily } = socket;
-                const { resBody, statusCode, statusMessage, bodySize: responseSize } = res; //OutgoingMessage (ServerResponse)
+                const { resBody, statusCode, statusMessage, bodySize: responseSize, maxHttpLogBodyLength: resMaxBodySize, truncated: resTruncated } = res; //OutgoingMessage (ServerResponse)
                 const resHeaders = res.getHeaders();
-                const requestSize = reqBody?.length || null;
-
                 const processingTime = Date.now() - requestStart;
                 log = {
                     url: (url == '/') ? originalUrl : url,
@@ -45,13 +43,17 @@ const morphAccessLogs = ({ type, socket, event, data, req, res, date, dateTime, 
                         url: (url == '/') ? originalUrl : url,
                         method,
                         headers,
-                        requestSize
+                        bodySize: requestSize,
+                        maxBodySize: reqMaxBodySize || null,
+                        truncated: reqTruncated ?? null
                     },
                     response: {
                         headers: resHeaders ? { ...resHeaders } : {},
                         statusCode,
                         statusMessage,
-                        responseSize
+                        bodySize: responseSize,
+                        maxBodySize: resMaxBodySize || null,
+                        truncated: resTruncated ?? null
                     },
                     logType: 'accessLogs',
                 };
@@ -99,12 +101,12 @@ const morphAccessLogs = ({ type, socket, event, data, req, res, date, dateTime, 
 
 /**
  * Initiates the `incoming access` logger
- * @param {object} [a = This Defaults to values from `initialisation` object if specified else from `constants.js`] - an Object that has 5 properties.
- * @param {string=} [a.microServiceName] - (Optional) Name of microService. Defaults to values from initialisation object if specified else constants.js
- * @param {string=} [a.brand_name] - (Optional) Name of brand. Defaults to values from initialisation object if specified else constants.js
- * @param {string=} [a.cs_env] - (Optional) The environment name. Defaults to values from initialisation object if specified else constants.js
- * @param {number=} [a.batchSize] - (Optional) Size of batch. Defaults to values from initialisation object if specified else constants.js
- * @param {string=} [a.timezone] - (Optional) Timezone to be used by moment. Defaults to values from initialisation object if specified else constants.js
+ * @param {object} [a = This Defaults to values from `initialization` object if specified else from `constants.js`] - an Object that has 5 properties.
+ * @param {string=} [a.microServiceName] - (Optional) Name of microService. Defaults to values from initialization object if specified else constants.js
+ * @param {string=} [a.brand_name] - (Optional) Name of brand. Defaults to values from initialization object if specified else constants.js
+ * @param {string=} [a.cs_env] - (Optional) The environment name. Defaults to values from initialization object if specified else constants.js
+ * @param {number=} [a.batchSize] - (Optional) Size of batch. Defaults to values from initialization object if specified else constants.js
+ * @param {string=} [a.timezone] - (Optional) Timezone to be used by moment. Defaults to values from initialization object if specified else constants.js
  *
  */
 
@@ -112,17 +114,33 @@ const exportAccessLogs = ({ microServiceName, brand_name, cs_env, batchSize, tim
     return (req, res, next) => {
         try {
             const requestStart = Date.now();
-            // patchObjectDotFunctions('send', null, res, 'res');
+            const resBodyArray = [];
+            const reqBodyArray = [];
+            // patchObjectDotFunctions('send', res, 'res', null);
 
-            const bodyArray = [];
-            patchObjectDotFunctions('write', bodyArray, res, 'res', maxHttpLogBodyLength);
-            patchObjectDotFunctions('end', bodyArray, res, 'res', maxHttpLogBodyLength);
+            patchObjectDotFunctions('write', res, 'res', resBodyArray, maxHttpLogBodyLength, null, false);
+            patchObjectDotFunctions('end', res, 'res', resBodyArray, maxHttpLogBodyLength, null, true);
+
+            req.on('data', (chunk) => {
+                if (debug) console.log('\n<><><><> DEBUG <><><><>\nAccess Request Data \n<><><><> DEBUG <><><><>\n');
+                patchObjectDotFunctions('assemble', req, 'req', reqBodyArray, maxHttpLogBodyLength, chunk, false);
+            });
+
+            req.on('end', (chunk) => {
+                if (debug) console.log('\n<><><><> DEBUG <><><><>\nAccess Request End \n<><><><> DEBUG <><><><>\n');
+                patchObjectDotFunctions('assemble', req, 'req', reqBodyArray, maxHttpLogBodyLength, chunk, true);
+            });
+
+            // req.on('close', () => {
+            //     if (debug) console.log('\n<><><><> DEBUG <><><><>\nAccess Request Close \n<><><><> DEBUG <><><><>\n');
+            // });
 
             res.on('finish', () => {
                 try {
+                    if (debug) console.log('\n<><><><> DEBUG <><><><>\nAccess Response Finish \n<><><><> DEBUG <><><><>\n');
                     const date = momentTimezone().tz(timezone).startOf('day').format('YYYY-MM-DD');
                     const dateTime = momentTimezone().tz(timezone).format();
-                    const log = morphAccessLogs({ type: 'http-access', req, res, date, dateTime, requestStart, microServiceName, maxHttpLogBodyLength });
+                    const log = morphAccessLogs({ type: 'http-access', req, res, date, dateTime, requestStart, microServiceName });
                     if (debug) console.log('\n<><><><> DEBUG <><><><>\nAccessLog: ', JSON.stringify(log, null, 4), '\n<><><><> DEBUG <><><><>\n');
                     if (ship) shipDataToElasticsearch({ log, microServiceName, brand_name, cs_env, batchSize, timezone, exporterType: 'access' });
                 } catch (err) {
@@ -132,6 +150,11 @@ const exportAccessLogs = ({ microServiceName, brand_name, cs_env, batchSize, tim
                     };
                 }
             });
+
+            // res.on('close', () => {
+            //     if (debug) console.log('\n<><><><> DEBUG <><><><>\nAccess Response Close \n<><><><> DEBUG <><><><>\n');
+            // });
+
             next();
         } catch (err) {
             errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.exportAccessLogs' });
@@ -142,13 +165,13 @@ const exportAccessLogs = ({ microServiceName, brand_name, cs_env, batchSize, tim
 
 /**
  * Initiates the `incoming socket access` logger
- * @param {object} [a = This Defaults to values from `initialisation` object if specified else from `constants.js`] - an Object that has 5 properties.
+ * @param {object} [a = This Defaults to values from `initialization` object if specified else from `constants.js`] - an Object that has 5 properties.
  * @param {array} [a.namespaces] - (Required) List of socket.io namespace objects.
- * @param {string=} [a.microServiceName] - (Optional) Name of microService. Defaults to values from initialisation object if specified else constants.js
- * @param {string=} [a.brand_name] - (Optional) Name of brand. Defaults to values from initialisation object if specified else constants.js
- * @param {string=} [a.cs_env] - (Optional) The environment name. Defaults to values from initialisation object if specified else constants.js
- * @param {number=} [a.batchSize] - (Optional) Size of batch. Defaults to values from initialisation object if specified else constants.js
- * @param {string=} [a.timezone] - (Optional) Timezone to be used by moment. Defaults to values from initialisation object if specified else constants.js
+ * @param {string=} [a.microServiceName] - (Optional) Name of microService. Defaults to values from initialization object if specified else constants.js
+ * @param {string=} [a.brand_name] - (Optional) Name of brand. Defaults to values from initialization object if specified else constants.js
+ * @param {string=} [a.cs_env] - (Optional) The environment name. Defaults to values from initialization object if specified else constants.js
+ * @param {number=} [a.batchSize] - (Optional) Size of batch. Defaults to values from initialization object if specified else constants.js
+ * @param {string=} [a.timezone] - (Optional) Timezone to be used by moment. Defaults to values from initialization object if specified else constants.js
  * @param {array} [a.eventsToLog] - (Optional) List of custom socket events to listen to.
  *
  */

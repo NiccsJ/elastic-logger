@@ -242,7 +242,7 @@ const getLogBody = (reqHeaders, body, statusCode, type = 'req') => { //type not 
     return finalBody;
 };
 
-const assembleChunks = (object, objectType, array, chunk = null, assembleBody = false, maxHttpLogBodyLength = 0) => {
+const assembleChunks = (object, objectType, array, maxHttpLogBodyLength, chunk = null, assembleBody = false) => {
     try {
         if (maxHttpLogBodyLength > 1024 * 1024) maxHttpLogBodyLength = 1024 * 1024; //MAX limit at 1MB
         if (maxHttpLogBodyLength == 0) maxHttpLogBodyLength = 1024 * 1024; //MAX limit at 1MB
@@ -285,8 +285,9 @@ const assembleChunks = (object, objectType, array, chunk = null, assembleBody = 
     return;
 };
 
-const patchObjectDotFunctions = (fnType, bodyArray, object, objectType, maxHttpLogBodyLength = 0) => { //todo: add configurable limit on body size
+const patchObjectDotFunctions = (fnType, object, objectType, bodyArray, maxHttpLogBodyLength, chunk = null, assembleBody = false) => {
     try {
+        if (debug) console.log('\n<><><><> DEBUG <><><><>\npatchObjectDotFunctions, objectType: ', objectType, ' maxHttpLogBodyLength before: ', maxHttpLogBodyLength, '\n<><><><> DEBUG <><><><>\n');
         maxHttpLogBodyLength = maxHttpLogBodyLength ? maxHttpLogBodyLength : (defaultLoggerDetails?.maxHttpLogBodyLength || defaultInitializationValues.maxHttpLogBodyLength);
         switch (fnType) {
             case 'write':
@@ -294,7 +295,7 @@ const patchObjectDotFunctions = (fnType, bodyArray, object, objectType, maxHttpL
                     const original = object.write;
                     object.write = function () {
                         try {
-                            assembleChunks(object, objectType, bodyArray, arguments[0], false, maxHttpLogBodyLength);
+                            assembleChunks(object, objectType, bodyArray, maxHttpLogBodyLength, arguments[0], false);
                             return original.apply(this, arguments);
                         } catch (err) {
                             errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.patchObjectDotFunctions.case.write' });
@@ -308,7 +309,7 @@ const patchObjectDotFunctions = (fnType, bodyArray, object, objectType, maxHttpL
                     const original = object.end;
                     object.end = function () {
                         try {
-                            assembleChunks(object, objectType, bodyArray, arguments[0], true, maxHttpLogBodyLength);
+                            assembleChunks(object, objectType, bodyArray, maxHttpLogBodyLength, arguments[0], true);
                             return original.apply(this, arguments);
                         } catch (err) {
                             errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.patchObjectDotFunctions.case.end' });
@@ -317,6 +318,11 @@ const patchObjectDotFunctions = (fnType, bodyArray, object, objectType, maxHttpL
                     };
                     break;
                 }
+            case 'assemble':
+                {
+                    assembleChunks(object, objectType, bodyArray, maxHttpLogBodyLength, chunk, assembleBody);
+                };
+                break;
             case 'send':
                 {
                     const original = object.send;

@@ -1,7 +1,7 @@
 let url;
 const momentTimezone = require('moment-timezone');
 const { errorHandler, elasticError } = require('../utils/errorHandler');
-const { shipDataToElasticsearch, getLogBody, patchObjectDotFunctions, isObjEmpty, assembleChunks } = require('../utils/utilities');
+const { shipDataToElasticsearch, getLogBody, patchObjectDotFunctions, isObjEmpty } = require('../utils/utilities');
 const { debug } = require('../utils/constants');
 
 const convertAllKeysString = (object) => {
@@ -115,9 +115,9 @@ const overwriteHttpProtocol = async ({ microServiceName, brand_name, cs_env, bat
 
                         if (hostname && !ips.includes(hostname)) {
                             if (debug) console.log('\n<><><><> DEBUG <><><><>\nRequest Hostname, Host: ', hostname, nullHostname, '\nElastic-Kibana IPs/URLs: ', ips, '\n<><><><> DEBUG <><><><>\n');
-                            const bodyArray = [];
-                            patchObjectDotFunctions('write', bodyArray, req, 'req', maxHttpLogBodyLength);
-                            patchObjectDotFunctions('end', bodyArray, req, 'req', maxHttpLogBodyLength);
+                            const reqBodyArray = [];
+                            patchObjectDotFunctions('write', req, 'req', reqBodyArray, maxHttpLogBodyLength, null, false);
+                            patchObjectDotFunctions('end', req, 'req', reqBodyArray, maxHttpLogBodyLength, null, true);
 
                             // req.on('finish', () => {
                             //     if (debug) console.log('\n<><><><> DEBUG <><><><>\nRequest Finish \n<><><><> DEBUG <><><><>\n');
@@ -128,15 +128,15 @@ const overwriteHttpProtocol = async ({ microServiceName, brand_name, cs_env, bat
                                 const { statusCode } = res;
                                 options.statusCode = statusCode;
 
-                                const bodyArray = [];
+                                const resBodyArray = [];
                                 res.on('data', (chunk) => {
                                     if (debug) console.log('\n<><><><> DEBUG <><><><>\nResponse Data \n<><><><> DEBUG <><><><>\n');
-                                    assembleChunks(res, 'res', bodyArray, chunk, false, maxHttpLogBodyLength);
+                                    patchObjectDotFunctions('assemble', res, 'res', resBodyArray, maxHttpLogBodyLength, chunk, false);
                                 });
 
                                 res.on('end', (chunk) => {
                                     if (debug) console.log('\n<><><><> DEBUG <><><><>\nResponse End \n<><><><> DEBUG <><><><>\n');
-                                    assembleChunks(res, 'res', bodyArray, chunk, true, maxHttpLogBodyLength);
+                                    patchObjectDotFunctions('assemble', res, 'res', resBodyArray, maxHttpLogBodyLength, chunk, true);
                                 });
 
                                 res.on('close', () => {
