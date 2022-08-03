@@ -16,7 +16,8 @@ var {
     AWS_METADATA_ENDPOINT_MAPPINGS,
     AWS_METADATA_BASE_URL,
     AWS_METADATA_ENDPOINT,
-    DEFAULT_AWS_METADATA_OBJECT
+    DEFAULT_AWS_METADATA_OBJECT,
+    packageVersion
 } = require('./constants');
 
 const isEC2 = async () => {
@@ -154,8 +155,10 @@ const shipDataToElasticsearch = async ({ log, esConnObj, microServiceName, brand
                 console.log('hmmmmmmm.....default? How?', exporterType);
                 throw new elasticError({ name: 'Argument(s) validation error:', message: `Invalid exporterType specified: '${exporterType}'. Allowed values are: 'initializer', 'access', and 'api'.`, type: 'elastic-logger', status: 998 });
         };
+
         //adding cloud-meta-data if enabled
         if (enableCloudMetadata) log['cloud-meta-data'] = cachedCloudMetadata ? cachedCloudMetadata : DEFAULT_AWS_METADATA_OBJECT;
+        log['packageVersion'] = packageVersion ?? null;
 
         batchSize = batchSize ? batchSize : defaultLoggerDetails.batchSize;
         brand_name = brand_name ? brand_name : defaultLoggerDetails.brand_name;

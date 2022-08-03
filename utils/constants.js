@@ -1,3 +1,5 @@
+const packageVersion = 'v3.6';
+
 /*
 Cloud Metadata Endpoint Configuration
 */
@@ -137,5 +139,6 @@ module.exports = {
     AWS_METADATA_ENDPOINT,
     AWS_METADATA_ENDPOINT_MAPPINGS,
     DEFAULT_AWS_METADATA_OBJECT,
-    defaultSocketEventsToListen
+    defaultSocketEventsToListen,
+    packageVersion
 };
