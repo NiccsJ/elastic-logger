@@ -6,8 +6,7 @@ const { errorHandler, dynamicError } = require('../errorHandler');
 
 const sendRequest = async ({ apiEndpoint, method, queryParams = null, postData = null }) => {
     try {
-        if (!esConnObj)
-            esConnObj = require('@niccsj/elastic-logger/utils/elasticHandler/initializeElasticLogger').esClientObj.defaultLoggerDetails.esConnObj;
+        if (!esConnObj) esConnObj = require('../elasticHandler/initializeElasticLogger').esClientObj.defaultLoggerDetails.esConnObj;
         const { kibanaUrl } = defaultKibanaValues;
         const { auth, authType } = esConnObj;
         if (authType == 'none') throw new dynamicError({ name: 'KibanaAPI error:', message: `Kibana APIs doesn't support authType: none`, type: 'elastic-logger', status: 777, metadata: { result } });
@@ -49,6 +48,4 @@ const sendRequest = async ({ apiEndpoint, method, queryParams = null, postData =
     }
 };
 
-module.exports = { 
-    sendRequest
-};
+module.exports = { sendRequest };

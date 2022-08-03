@@ -1,7 +1,7 @@
 const safeStringify = require('json-stringify-safe');
 const { debug } = require('../constants');
 const { errorHandler, dynamicError } = require('../errorHandler');
-const { isArray } = require('lodash');
+// const { isArray } = require('lodash');
 const { sendRequest } = require("./sendRequest");
 
 const getIndexPattern = async ({ indexPattern }) => {
@@ -44,7 +44,7 @@ const getIndexPatternDetails = async ({ indexPattern }) => {
         const { statusCode, body } = result;
 
         if (statusCode == 200) {
-            if (body && body.fields && isArray(body.fields)) result.currentIndexFields = body.fields;
+            if (body && body.fields && Array.isArray(body.fields)) result.currentIndexFields = body.fields;
         } else if (statusCode == 404) {
             const { message } = result;
             throw new dynamicError({ name: 'KibanaAPI error:', message: `getIndexPatterDetails failed with: ${message}`, type: 'elastic-logger', status: 777 });

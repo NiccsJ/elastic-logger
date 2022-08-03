@@ -14,7 +14,7 @@ const { errorHandler } = require('../utils/errorHandler');
  * @param {object=} [e.metadata] - (Optional) Additional metadata to be added. Defaults to values from initialisation object if specified else constants.js
  * @param {boolean=} [e.ship = true] - (Optional) Bool to ship the log to ES. Defaults to values from initialisation object if specified else constants.js
  * @param {boolean=} [e.log = true] - (Optional) Bool to log the error on console. Defaults to values from initialisation object if specified else constants.js
- * 
+ *
  */
 
 const exportErrorLogs = async ({ err, microServiceName, brand_name, cs_env, batchSize, timezone = 'Asia/Calcutta', scope = 'global', status = null, metadata, ship = true, log = true }) => {
