@@ -16,7 +16,8 @@
         "axios": "^0.21.1",
         "dotenv": "^5.0.1",
         "json-stringify-safe": "^5.0.1",
-        "moment-timezone": "^0.5.33"
+        "moment-timezone": "^0.5.33",
+        "type-is": "^1.6.18"
     },
     "devDependencies": {
         "generate-changelog": "^1.8.0"
