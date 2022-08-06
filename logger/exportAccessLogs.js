@@ -1,3 +1,4 @@
+const is = require('type-is');
 const momentTimezone = require('moment-timezone');
 const { shipDataToElasticsearch, getLogBody, patchObjectDotFunctions } = require('../utils/utilities');
 const { errorHandler, elasticError } = require('../utils/errorHandler');
@@ -111,56 +112,53 @@ const morphAccessLogs = ({ type, socket, event, data, req, res, date, dateTime, 
  */
 
 const exportAccessLogs = ({ microServiceName, brand_name, cs_env, batchSize, timezone = 'Asia/Calcutta', maxHttpLogBodyLength, ship = true }) => {
-    return (req, res, next) => {
-        try {
-            const requestStart = Date.now();
-            const resBodyArray = [];
-            const reqBodyArray = [];
-            // patchObjectDotFunctions('send', res, 'res', null);
+    try {
+        return (req, res, next) => {
+            try {
+                // if (is(req, ['multipart'])) return next();
+                const requestStart = Date.now();
+                const resBodyArray = [];
+                const reqBodyArray = [];
+                // patchObjectDotFunctions('send', res, 'res', null);
 
-            patchObjectDotFunctions('write', res, 'res', resBodyArray, maxHttpLogBodyLength, null, false);
-            patchObjectDotFunctions('end', res, 'res', resBodyArray, maxHttpLogBodyLength, null, true);
+                patchObjectDotFunctions('write', res, 'res', resBodyArray, maxHttpLogBodyLength, null, false);
+                patchObjectDotFunctions('end', res, 'res', resBodyArray, maxHttpLogBodyLength, null, true);
 
-            req.on('data', (chunk) => {
-                if (debug) console.log('\n<><><><> DEBUG <><><><>\nAccess Request Data \n<><><><> DEBUG <><><><>\n');
-                patchObjectDotFunctions('assemble', req, 'req', reqBodyArray, maxHttpLogBodyLength, chunk, false);
-            });
-
-            req.on('end', (chunk) => {
-                if (debug) console.log('\n<><><><> DEBUG <><><><>\nAccess Request End \n<><><><> DEBUG <><><><>\n');
-                patchObjectDotFunctions('assemble', req, 'req', reqBodyArray, maxHttpLogBodyLength, chunk, true);
-            });
-
-            // req.on('close', () => {
-            //     if (debug) console.log('\n<><><><> DEBUG <><><><>\nAccess Request Close \n<><><><> DEBUG <><><><>\n');
-            // });
-
-            res.on('finish', () => {
-                try {
-                    if (debug) console.log('\n<><><><> DEBUG <><><><>\nAccess Response Finish \n<><><><> DEBUG <><><><>\n');
-                    const date = momentTimezone().tz(timezone).startOf('day').format('YYYY-MM-DD');
-                    const dateTime = momentTimezone().tz(timezone).format();
-                    const log = morphAccessLogs({ type: 'http-access', req, res, date, dateTime, requestStart, microServiceName });
-                    if (debug) console.log('\n<><><><> DEBUG <><><><>\nAccessLog: ', JSON.stringify(log, null, 4), '\n<><><><> DEBUG <><><><>\n');
-                    if (ship) shipDataToElasticsearch({ log, microServiceName, brand_name, cs_env, batchSize, timezone, exporterType: 'access' });
-                } catch (err) {
-                    errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.exportAccessLogs.res.on' });
-                    return (req, res, next) => {
-                        next();
-                    };
+                if (!is(req, ['multipart'])) { //work-around to handle "multer": "^1.4.2" not being to generate file if these event listeners are added.
+                    req.on('data', (chunk) => {
+                        if (debug) console.log('\n<><><><> DEBUG <><><><>\nAccess Request Data \n<><><><> DEBUG <><><><>\n');
+                        patchObjectDotFunctions('assemble', req, 'req', reqBodyArray, maxHttpLogBodyLength, chunk, false);
+                    });
+                    req.on('end', (chunk) => {
+                        if (debug) console.log('\n<><><><> DEBUG <><><><>\nAccess Request End \n<><><><> DEBUG <><><><>\n');
+                        patchObjectDotFunctions('assemble', req, 'req', reqBodyArray, maxHttpLogBodyLength, chunk, true);
+                    });
                 }
-            });
 
-            // res.on('close', () => {
-            //     if (debug) console.log('\n<><><><> DEBUG <><><><>\nAccess Response Close \n<><><><> DEBUG <><><><>\n');
-            // });
+                res.on('finish', () => {
+                    try {
+                        if (debug) console.log('\n<><><><> DEBUG <><><><>\nAccess Response Finish \n<><><><> DEBUG <><><><>\n');
+                        const date = momentTimezone().tz(timezone).startOf('day').format('YYYY-MM-DD');
+                        const dateTime = momentTimezone().tz(timezone).format();
+                        const log = morphAccessLogs({ type: 'http-access', req, res, date, dateTime, requestStart, microServiceName });
+                        if (debug) console.log('\n<><><><> DEBUG <><><><>\nAccessLog: ', JSON.stringify(log, null, 4), '\n<><><><> DEBUG <><><><>\n');
+                        if (ship) shipDataToElasticsearch({ log, microServiceName, brand_name, cs_env, batchSize, timezone, exporterType: 'access' });
+                    } catch (err) {
+                        errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.exportAccessLogs.res.on.finish' });
+                        return next();
+                    }
+                });
 
-            next();
-        } catch (err) {
-            errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.exportAccessLogs' });
-            next();
-        }
-    };
+                return next();
+            } catch (err) {
+                errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.exportAccessLogs.return' });
+                return next();
+            }
+        };
+    } catch (err) {
+        errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.exportAccessLogs' });
+        return (req, res, next) => { next() };
+    }
 };
 
 /**

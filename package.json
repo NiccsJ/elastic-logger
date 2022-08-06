@@ -1,7 +1,7 @@
 {
     "name": "@niccsj/elastic-logger",
-    "version": "3.6.0",
-    "description": "Ships error logs, inbount api logs and outbound api logs to elasticsearch cluster.",
+    "version": "3.6.1",
+    "description": "Ships error logs, inbound api logs and outbound api logs to elasticsearch cluster.",
     "license": "MIT",
     "repository": "NiccsJ/elastic-logger",
     "main": "index.js",
@@ -16,7 +16,8 @@
         "axios": "^0.21.1",
         "dotenv": "^5.0.1",
         "json-stringify-safe": "^5.0.1",
-        "moment-timezone": "^0.5.33"
+        "moment-timezone": "^0.5.33",
+        "type-is": "^1.6.18"
     },
     "devDependencies": {
         "generate-changelog": "^1.8.0"
