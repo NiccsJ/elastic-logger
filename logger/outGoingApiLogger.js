@@ -30,16 +30,16 @@ const generateLogObject = (data, type, error, additionalData) => {
                 {
                     logObject.requestStart = additionalData.requestStart;
                     logObject.protocol = data.protocol || '';
-                    logObject.href = data.protocol + '//' + ((data.port && !(data.port == '443' || data.port == '80')) ? (data.hostname + ':' + data.port + data.path) : (data.hostname + data.path)) || data.href;
-                    // logObject.href1 = data.protocol + '//' + (data.href ? data.href : (data.port && !(data.port == '443' || data.port == '80')) ? (data.hostname + ':' + data.port + data.path) : (data.hostname + data.path));
-                    logObject.method = data.method || '';
                     logObject.host = data.host ? data.host : data.hostname;
-                    logObject.hostname = data.hostname || '';
                     logObject.port = data.port || null;
+                    logObject.path = data.path || '';
+                    // logObject.href1 = data.protocol + '//' + data.href || ((data.port && !(data.port == '443' || data.port == '80')) ? (data.hostname + ':' + data.port + data.path) : (data.hostname + data.path));
+                    logObject.href = logObject.protocol != '' ? (logObject.protocol + '//' + (data.href ? data.href : (logObject.port && !(logObject.port == '443' || logObject.port == '80')) ? (logObject.host + ':' + logObject.port + logObject.path) : (logObject.host + logObject.path))) : (data.href ? data.href : (logObject.port && !(logObject.port == '443' || logObject.port == '80')) ? (logObject.host + ':' + logObject.port + logObject.path) : (logObject.host + logObject.path));
+                    logObject.method = data.method || '';
+                    logObject.hostname = data.hostname || '';
                     logObject.headers = convertAllKeysString({ ...additionalData.requestHeaders }) || {};
                     logObject.query = data.query || null;
                     logObject.pathname = data.pathname || '';
-                    logObject.path = data.path || '';
                     logObject.bodySize = additionalData.requestBodySize || null;
                     // logObject.bodyByteLength = additionalData.requestBodyByteLength || null;
                     logObject.maxBodySize = additionalData.maxHttpLogBodyLength ?? null;
