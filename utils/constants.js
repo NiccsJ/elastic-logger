@@ -1,4 +1,4 @@
-const packageVersion = 'v3.6.1';
+const packageVersion = 'v3.6.2';
 
 /*
 Cloud Metadata Endpoint Configuration
