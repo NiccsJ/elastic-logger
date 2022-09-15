@@ -67,7 +67,7 @@ const morphError = async ({ err, microServiceName, date, dateTime, status, scope
         errObj['parsed'] = true;
         errObj['name'] = err.name ? err.name : null;
         errObj['message'] = err.message ? err.message : err.stack ? err.stack.split("\n")[0] : 'Unable to parse message';
-        errObj['description'] = err.description ? err.description : err.stack ? err.stack : err;
+        errObj['description'] = err.description ? err.description : err.stack ? err.stack : 'Unable to parse description';
 
         //conditional keys
         if (err.response && err.response.data) {
@@ -95,7 +95,15 @@ const morphError = async ({ err, microServiceName, date, dateTime, status, scope
         errObj['logType'] = 'errorLogs';
         errObj['logDate'] = date;
         errObj["@timestamp"] = dateTime;
-        errObj['parsed'] = (errObj['message'] === 'Unable to parse message') ? false : true;
+        errObj['parsed'] = ((errObj['message'] === 'Unable to parse message') || (errObj['description'] === 'Unable to parse description')) ? false : true;
+
+        // if (!errObj.parsed) {
+        //     try {
+        //         errObj['raw'] = JSON.stringify(err);
+        //     } catch (err) {
+        //         errObj['raw'] = 'Unable to parse error';
+        //     }
+        // }
 
         return errObj;
 
