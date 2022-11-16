@@ -48,7 +48,7 @@ const initializeElasticLogger = async ({ esConnObj, brand_name, cs_env, microSer
 		let { size, hotDuration, warmAfter, deleteAfter, shrinkShards, overwriteILM } = ilmObject;
 		let { primaryShards, replicaShards, priority, overwrite } = indexSettings;
 		let { kibanaUrl } = defaultKibanaValues;
-		let { dynamicMappings } = dynamicTemplateComponentTemplateSettings;
+		let { dynamicMappings, dynamicSettings, overwriteDynamicTemplate } = dynamicTemplateComponentTemplateSettings;
 		let { overwriteMappings, metadataMappings } = metadataCompomentTempalteSettings;
 
 		//set up values/defaults for initialization from constants
@@ -93,7 +93,7 @@ const initializeElasticLogger = async ({ esConnObj, brand_name, cs_env, microSer
 			}
 
 			setUpILM({ policyName, size, hotDuration, warmAfter, deleteAfter, shrinkShards, overwriteILM });
-			putDefaultComponetTemplate({ componentTemplateName: "common_dynamic_template_component_template", mappings: dynamicMappings, overwriteMappings: false });
+			putDefaultComponetTemplate({ componentTemplateName: "common_dynamic_template_component_template", mappings: dynamicMappings, settings: dynamicSettings, overwriteMappings: overwriteDynamicTemplate });
 			putDefaultComponetTemplate({ componentTemplateName: "common_metadata_component_template", mappings: metadataMappings, overwriteMappings });
 			putIndexTemplate({ brand_name, cs_env, microServiceName, primaryShards, replicaShards, priority, overwrite, dynamicMappings, metadataMappings, overwriteMappings });
 			if (exportApiLogs) overwriteHttpProtocol({ microServiceName, brand_name, cs_env, batchSize, timezone, maxHttpLogBodyLength, elasticUrl, kibanaUrl, ship });

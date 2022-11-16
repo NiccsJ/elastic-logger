@@ -1,4 +1,4 @@
-const packageVersion = 'v3.6.3';
+const packageVersion = 'v3.6.4';
 
 /*
 Cloud Metadata Endpoint Configuration
@@ -109,6 +109,7 @@ const metadataCompomentTempalteSettings = {
 };
 
 const dynamicTemplateComponentTemplateSettings = {
+    overwriteDynamicTemplate: (process.env.dynamicTemplateOverwrite && process.env.dynamicTemplateOverwrite == 'true') ? true : false,
     dynamicMappings: {
         // dynamic: true,
         // date_detection: true,
@@ -122,6 +123,9 @@ const dynamicTemplateComponentTemplateSettings = {
             }
         ]
     },
+    dynamicSettings: process.env.dynamicComponentTemplateSettings ? JSON.parse(process.env.dynamicComponentTemplateSettings) : {
+        "index.max_docvalue_fields_search": 200
+    }
     // metadataComponentName: "common_dynamic_template_component_template"
 };
 

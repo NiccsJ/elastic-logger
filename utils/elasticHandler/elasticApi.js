@@ -4,7 +4,7 @@ const bwcFlatMap = require('array.prototype.flatmap');
 const safeStringify = require('json-stringify-safe');
 const { debug } = require('../constants');
 
-//Componemt Tempalte
+//Component Template
 const componetTemplateExists = async (componentTemplateName) => {
     try {
         if (!client) client = require('./initializeElasticLogger').esClientObj.client;
@@ -17,20 +17,20 @@ const componetTemplateExists = async (componentTemplateName) => {
     } catch (err) {
         errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.componetTemplateExists' });
         const { statusCode } = err && err.meta ? err.meta : null;
-        if (statusCode === 404) return false; //tempalte doesn't exist
+        if (statusCode === 404) return false; //template doesn't exist
     }
 };
 
-const putDefaultComponetTemplate = async ({ mappings, overwriteMappings, componentTemplateName }) => {
+const putDefaultComponetTemplate = async ({ mappings, overwriteMappings, componentTemplateName, settings = {} }) => {
     try {
-        const create = !overwriteMappings; //just to avoid confusion owith the working of create option.
+        const create = !overwriteMappings; //just to avoid confusion with the working of create option.
         if (!client) client = require('./initializeElasticLogger').esClientObj.client;
         if (create) if (await componetTemplateExists([componentTemplateName])) return true;
         const options = {};
         options.name = componentTemplateName;
-        options.create = create; //Will overwrite if false, throws an tempalte exists exception otherwise! Yeah, talk about shit that don't make sense!
+        options.create = create; //Will overwrite if false, throws an template exists exception otherwise! Yeah, talk about shit that don't make sense!
         options.body = {};
-        options.body.template = { mappings };
+        options.body.template = { mappings, settings };
 
         const { body: response, statusCode: status } = await client.cluster.putComponentTemplate(options);
         if (debug) console.log('\n<><><><> DEBUG <><><><>\nputDefaultComponetTemplate: ', status, response, '\n<><><><> DEBUG <><><><>\n');
