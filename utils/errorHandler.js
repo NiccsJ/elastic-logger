@@ -95,15 +95,15 @@ const morphError = async ({ err, microServiceName, date, dateTime, status, scope
         errObj['logType'] = 'errorLogs';
         errObj['logDate'] = date;
         errObj["@timestamp"] = dateTime;
-        errObj['parsed'] = ((errObj['message'] === 'Unable to parse message') || (errObj['description'] === 'Unable to parse description')) ? false : true;
+        errObj['parsed'] = ((errObj['message'] === 'Unable to parse message') && (errObj['description'] === 'Unable to parse description')) ? false : true;
 
-        // if (!errObj.parsed) {
-        //     try {
-        //         errObj['raw'] = JSON.stringify(err);
-        //     } catch (err) {
-        //         errObj['raw'] = 'Unable to parse error';
-        //     }
-        // }
+        if (!errObj.parsed) {
+            try {
+                errObj['raw'] = JSON.stringify(err);
+            } catch (err) {
+                errObj['raw'] = 'Unable to parse error';
+            }
+        }
 
         return errObj;
 
