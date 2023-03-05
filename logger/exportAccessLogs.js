@@ -18,6 +18,14 @@ const adapterLogBody = (client) => {
     }
 };
 
+const extractQueryParams = (originalUrl) => {
+    const params = {}; const temp = originalUrl.split('?');
+    const url = temp[0]; const string = temp[1];
+    if (!string) return { url, params };
+    string.split('&').forEach(p => { const temp = p.split('='); params[temp[0]] = temp[1]; });
+    return { params, url };
+};
+
 const morphAccessLogs = ({ type, socket, event, data, req, res, date, dateTime, requestStart, microServiceName }) => {
     let log = {};
     try {
@@ -28,11 +36,14 @@ const morphAccessLogs = ({ type, socket, event, data, req, res, date, dateTime, 
                 const { resBody, statusCode, statusMessage, bodySize: responseSize, maxHttpLogBodyLength: resMaxBodySize, truncated: resTruncated } = res; //OutgoingMessage (ServerResponse)
                 const resHeaders = res.getHeaders();
                 const processingTime = Date.now() - requestStart;
+                const reqUrl = extractQueryParams(originalUrl);
+
                 log = {
-                    url: (url == '/') ? originalUrl : url,
+                    url: `${req.protocol}://${req.get('host')}${reqUrl.url}`,
                     httpVersion,
                     method,
                     headers,
+                    queryParams: reqUrl.params,
                     remoteAddress,
                     remoteFamily,
                     statusCode,
@@ -41,9 +52,10 @@ const morphAccessLogs = ({ type, socket, event, data, req, res, date, dateTime, 
                     requestSize,
                     responseSize,
                     request: {
-                        url: (url == '/') ? originalUrl : url,
+                        url: `${req.protocol}://${req.get('host')}${reqUrl.url}`,
                         method,
                         headers,
+                        queryParams: reqUrl.params,
                         bodySize: requestSize,
                         maxBodySize: reqMaxBodySize || null,
                         truncated: reqTruncated ?? null
