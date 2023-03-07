@@ -1,4 +1,5 @@
-const packageVersion = 'v3.6.7-beta.0';
+const { version } = require('../package.json');
+const packageVersion = version;
 
 /*
 Cloud Metadata Endpoint Configuration
