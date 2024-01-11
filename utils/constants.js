@@ -1,3 +1,6 @@
+const { version } = require('../package.json');
+const packageVersion = version;
+
 /*
 Cloud Metadata Endpoint Configuration
 */
@@ -32,6 +35,7 @@ const DEFAULT_AWS_METADATA_OBJECT = {
         'hostname': 'not-ready'
     }
 };
+
 /*
 Default Values
 */
@@ -58,6 +62,7 @@ const defaultInitializationValues = {
     microServiceName: process.env.MS_NAME ? process.env.MS_NAME : 'default',
     batchSize: 100,
     timezone: 'Asia/Calcutta',
+    maxHttpLogBodyLength: 100 * 1024 //default 100KB
 };
 
 const defaultIndexTemplateValues = {
@@ -105,6 +110,7 @@ const metadataCompomentTempalteSettings = {
 };
 
 const dynamicTemplateComponentTemplateSettings = {
+    overwriteDynamicTemplate: (process.env.dynamicTemplateOverwrite && process.env.dynamicTemplateOverwrite == 'true') ? true : false,
     dynamicMappings: {
         // dynamic: true,
         // date_detection: true,
@@ -118,6 +124,9 @@ const dynamicTemplateComponentTemplateSettings = {
             }
         ]
     },
+    dynamicSettings: process.env.dynamicComponentTemplateSettings ? JSON.parse(process.env.dynamicComponentTemplateSettings) : {
+        "index.max_docvalue_fields_search": 200
+    }
     // metadataComponentName: "common_dynamic_template_component_template"
 };
 
@@ -135,5 +144,6 @@ module.exports = {
     AWS_METADATA_ENDPOINT,
     AWS_METADATA_ENDPOINT_MAPPINGS,
     DEFAULT_AWS_METADATA_OBJECT,
-    defaultSocketEventsToListen
+    defaultSocketEventsToListen,
+    packageVersion
 };

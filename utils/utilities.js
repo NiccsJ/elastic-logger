@@ -16,7 +16,8 @@ var {
     AWS_METADATA_ENDPOINT_MAPPINGS,
     AWS_METADATA_BASE_URL,
     AWS_METADATA_ENDPOINT,
-    DEFAULT_AWS_METADATA_OBJECT
+    DEFAULT_AWS_METADATA_OBJECT,
+    packageVersion
 } = require('./constants');
 
 const isEC2 = async () => {
@@ -66,7 +67,7 @@ const getCloudMetadata = async (cloudType) => {
                 break;
         }
         cachedCloudMetadata = cloudMetadataObj;
-        if (debug) console.log('\n<><><><> DEBUG <><><><>\ngetCloudMetadata---: ', 'cachedCloudMetadata: ', cachedCloudMetadata, '\n');
+        if (debug) console.log('\n<><><><> DEBUG <><><><>\ngetCloudMetadata: ', 'cachedCloudMetadata: ', cachedCloudMetadata, '\n<><><><> DEBUG <><><><>\n');
         return cloudMetadataObj;
     } catch (err) {
         errorHandler({ err, self: true, ship: false, scope: '@niccsj/elastic-logger.getCloudMetadata' });
@@ -79,12 +80,13 @@ if (enableCloudMetadata) getCloudMetadata(cloudType);
 
 const checkSuppliedArguments = async ({ err, esConnObj, microServiceName, brand_name, cs_env, batchSize, timezone, exporterType }, argCheckCount = 0) => {
     try {
-        if (debug) console.log('\n<><><><> DEBUG <><><><>\ncheckSuppliedArguments---: ', 'exporterType: ', exporterType, '\n');
+        if (debug) console.log('\n<><><><> DEBUG <><><><>\ncheckSuppliedArguments: ', 'exporterType: ', exporterType, '\n<><><><> DEBUG <><><><>\n');
         let argsValid = false;
         const suppliedArgs = { err, esConnObj, microServiceName, brand_name, cs_env, batchSize, timezone };
         let argsMissing = Object.values(suppliedArgs).some(o => !o);
 
         if (argCheckCount < 3 && argsMissing && exporterType != 'initializer') {
+            if (debug) console.log('\n<><><><> DEBUG <><><><>\nARGS MISSING: ', JSON.stringify(suppliedArgs, null, 4), '\n<><><><> DEBUG <><><><>\n');
             if (!defaultLoggerDetails) defaultLoggerDetails = require('../utils/elasticHandler/initializeElasticLogger').esClientObj.defaultLoggerDetails;
             argCheckCount++;
             const newDefaultLogger = {};
@@ -94,6 +96,8 @@ const checkSuppliedArguments = async ({ err, esConnObj, microServiceName, brand_
             newDefaultLogger.brand_name = (defaultLoggerDetails && defaultLoggerDetails.brand_name) ? defaultLoggerDetails.brand_name : defaultInitializationValues.brand_name;
             newDefaultLogger.cs_env = (defaultLoggerDetails && defaultLoggerDetails.cs_env) ? defaultLoggerDetails.cs_env : defaultInitializationValues.cs_env;
             newDefaultLogger.timezone = (defaultLoggerDetails && defaultLoggerDetails.timezone) ? defaultLoggerDetails.timezone : defaultInitializationValues.timezone;
+            // newDefaultLogger.maxHttpLogBodyLength = (defaultLoggerDetails && defaultLoggerDetails.maxHttpLogBodyLength) ? defaultLoggerDetails.maxHttpLogBodyLength : defaultInitializationValues.maxHttpLogBodyLength;
+
             defaultLoggerDetails = { ...newDefaultLogger };
             newDefaultLogger.err = err;
             newDefaultLogger.exporterType = exporterType;
@@ -107,9 +111,12 @@ const checkSuppliedArguments = async ({ err, esConnObj, microServiceName, brand_
                 if (!suppliedArgs[key]) missingArgs.push(`{${key}: ${suppliedArgs[key]}}`);
             }
             throw new elasticError({ name: 'Argument(s) validation error:', message: `Please supply all required arguments. Supplied arguments: ${missingArgs}, for exporterType: ${exporterType}`, type: 'elastic-logger', status: 998 });
-        } else if (esConnObj === true) {
-            argsValid = true;
-        } else {
+        }
+        // else if (esConnObj === true) {
+        //     argsValid = true;
+        // }
+        else {
+            // if (debug) console.log('\n<><><><> DEBUG <><><><>\nARGS NOT MISSING: ', JSON.stringify(suppliedArgs, null, 4), '\n<><><><> DEBUG <><><><>\n');
             if ((esConnObj && !(esConnObj.authType == 'none' || esConnObj.authType == 'basic' || esConnObj.authType == 'api'))) {
                 throw new elasticError({ name: 'Argument(s) validation error:', message: `Invalid authType specified: '${esConnObj.authType}'. Allowed values are: 'none', 'basic', 'api'.`, type: 'elastic-logger', status: 998 });
             } else if (esConnObj && (esConnObj.authType == 'basic' || esConnObj.authType == 'api')) {
@@ -120,11 +127,12 @@ const checkSuppliedArguments = async ({ err, esConnObj, microServiceName, brand_
             } else {
                 argsValid = true;
             }
+            if (!defaultLoggerDetails) defaultLoggerDetails = suppliedArgs; //initialise the deafaultLoggerDeatils
         }
+        if (debug) console.log('\n<><><><> DEBUG <><><><>\nES CLIENT OBJ DEFAULT LOGGER DETAILS OUTSIDE: ', JSON.stringify(defaultLoggerDetails, null, 4), '\n<><><><> DEBUG <><><><>\n');
         if (exporterType === 'initializer') initializerValid = argsValid;
         return argsValid;
     } catch (err) {
-        // throw(err);
         errorHandler({ err, ship: false, self: true, scope: '@niccsj/elastic-logger.checkSuppliedArguments' });
     }
 };
@@ -147,15 +155,17 @@ const shipDataToElasticsearch = async ({ log, esConnObj, microServiceName, brand
                 console.log('hmmmmmmm.....default? How?', exporterType);
                 throw new elasticError({ name: 'Argument(s) validation error:', message: `Invalid exporterType specified: '${exporterType}'. Allowed values are: 'initializer', 'access', and 'api'.`, type: 'elastic-logger', status: 998 });
         };
+
         //adding cloud-meta-data if enabled
         if (enableCloudMetadata) log['cloud-meta-data'] = cachedCloudMetadata ? cachedCloudMetadata : DEFAULT_AWS_METADATA_OBJECT;
+        log['packageVersion'] = packageVersion ?? null;
 
         batchSize = batchSize ? batchSize : defaultLoggerDetails.batchSize;
         brand_name = brand_name ? brand_name : defaultLoggerDetails.brand_name;
         cs_env = cs_env ? cs_env : defaultLoggerDetails.cs_env;
         const index = `${cs_env}_${brand_name}`;
         batchRequest.push(log);
-        if (debug) console.log('\n<><><><> DEBUG <><><><>\nCurrent Batch: ', batchRequest.length, 'Total Batch Size: ', batchSize, 'Index: ', index, '\n');
+        if (debug) console.log('\n<><><><> DEBUG <><><><>\nCurrent Batch: ', batchRequest.length, 'Total Batch Size: ', batchSize, 'Index: ', index, '\n<><><><> DEBUG <><><><>\n');
         if ((batchRequest.length >= batchSize)) {
             bulkIndex(batchRequest, index);
             batchRequest = [];
@@ -165,7 +175,184 @@ const shipDataToElasticsearch = async ({ log, esConnObj, microServiceName, brand
     }
 };
 
+const isObjEmpty = (obj) => {
+    try {
+        for (let key in obj) { if (obj.hasOwnProperty(key)) return false; }
+        return true;
+    } catch (err) {
+        errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.isObjEmpty' });
+        return true;
+    }
+
+};
+
+const isLogBodyEnabled = (headers, statusCode) => {
+    let status = false;
+    try {
+        if (debug) console.log('\n<><><><> DEBUG <><><><>\nstatusCode: ', statusCode, '\n<><><><> DEBUG <><><><>\n');
+        const { logbody, skipstatus, includestatus } = headers;
+        if (!logbody) return status;
+        if (logbody.toString() == 'true') {
+            if (statusCode == true) return status = true; //to enable body logging in case of req.error
+            if (skipstatus || includestatus) {
+                statusCode = statusCode?.toString();
+                const skipStatusArray = skipstatus?.split(',').map(s => s?.trim());
+                const includeStatusArray = includestatus?.split(',').map(s => s?.trim());
+
+                if (debug) console.log('\n<><><><> DEBUG <><><><>\nskipStatusArray: ', skipStatusArray, '\n<><><><> DEBUG <><><><>\n');
+                if (debug) console.log('\n<><><><> DEBUG <><><><>\nincludeStatusArray: ', includeStatusArray, '\n<><><><> DEBUG <><><><>\n');
+
+                if (Array.isArray(skipStatusArray) || Array.isArray(includeStatusArray)) {
+                    if (includeStatusArray?.includes(statusCode)) {
+                        if (debug) console.log('<><><> INCLUDE <><><>', statusCode, includeStatusArray, skipStatusArray);
+                        status = true;
+                    }
+                    if (!(skipStatusArray ? skipStatusArray?.includes(statusCode) : true)) {
+                        if (debug) console.log('<><><> SKIP <><><>', statusCode, includeStatusArray, skipStatusArray);
+                        status = true;
+                    }
+                }
+            } else {
+                status = true;
+            }
+        }
+    } catch (err) {
+        status = false;
+        errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.isLogBodyEnabled' }); //should ship be true? //no, will create too much traffic in error logs
+    }
+    return status;
+};
+
+const getLogBody = (reqHeaders, body, statusCode, type = 'req') => { //type not being used for now
+    let finalBody = {};
+    try {
+        if (!body || isObjEmpty(body)) return finalBody = { elasticBodyDefault: 'body not found in the request' };
+        if (!reqHeaders || isObjEmpty(reqHeaders)) return finalBody = { elasticBodyDefault: 'headers not found in the request' };
+        if (!isLogBodyEnabled(reqHeaders, statusCode)) return finalBody = { elasticBodyDefault: 'body logging not enabled for this request' };
+
+        try {
+            const jsonString = JSON.stringify(body, null, 2);
+            finalBody.elasticBody = jsonString;
+        } catch (err) {
+            finalBody.elasticBodyDefault = `Couldn't parse body: ${body}`;
+        }
+
+    } catch (err) {
+        // let metadata = {  }; //pass request params to identify for which req the error came from? Also, will need to set ship to true for this.
+        errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.getLogBody' });
+        finalBody.elasticBodyDefault = `Error while parsing body`;
+    }
+    return finalBody;
+};
+
+const assembleChunks = (object, objectType, array, maxHttpLogBodyLength, chunk = null, assembleBody = false) => {
+    try {
+        if (maxHttpLogBodyLength > 1024 * 1024) maxHttpLogBodyLength = 1024 * 1024; //MAX limit at 1MB
+        if (maxHttpLogBodyLength == 0) maxHttpLogBodyLength = 1024 * 1024; //MAX limit at 1MB
+
+        if (debug) console.log('\n<><><><> DEBUG <><><><>\nobjectType: ', objectType, ' maxHttpLogBodyLength: ', maxHttpLogBodyLength, '\n<><><><> DEBUG <><><><>\n');
+
+        let chunkBuffer;
+        let bodySize = object.bodySize || 0;
+        let bodyByteLength = object.bodyByteLength || 0;
+        object.truncated = object.truncated ?? false;
+
+        if (bodySize < maxHttpLogBodyLength) {
+            if (chunk) {
+                chunkBuffer = Buffer.from(chunk);
+                bodySize += chunk.length;
+                bodyByteLength += chunkBuffer.byteLength;
+                array.push(chunkBuffer);
+            }
+        } else {
+            object.truncated = true;
+            bodySize = maxHttpLogBodyLength;
+        }
+
+        // if (assembleBody) { //end
+            const body = Buffer.concat(array, bodySize < maxHttpLogBodyLength ? bodySize : maxHttpLogBodyLength).toString('utf8');
+            objectType == 'req' ? object.reqBody = body : object.resBody = body;
+        // } else { //data or write
+            // object.bodytempBuffer = array;
+        // }
+
+        object.bodySize = bodySize;
+        object.bodyByteLength = bodyByteLength;
+        object.maxHttpLogBodyLength = maxHttpLogBodyLength;
+
+    } catch(err){
+        errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.assembleChunks' });
+        const errorBody = `error while assembling body chunks: ${err}`
+        objectType == 'req' ? object.reqBody = errorBody : object.resBody = errorBody;
+    }
+    return;
+};
+
+const patchObjectDotFunctions = (fnType, object, objectType, bodyArray, maxHttpLogBodyLength, chunk = null, assembleBody = false) => {
+    try {
+        if (debug) console.log('\n<><><><> DEBUG <><><><>\npatchObjectDotFunctions, objectType: ', objectType, ' maxHttpLogBodyLength before: ', maxHttpLogBodyLength, '\n<><><><> DEBUG <><><><>\n');
+        maxHttpLogBodyLength = maxHttpLogBodyLength ? maxHttpLogBodyLength : (defaultLoggerDetails?.maxHttpLogBodyLength || defaultInitializationValues.maxHttpLogBodyLength);
+        switch (fnType) {
+            case 'write':
+                {
+                    const original = object.write;
+                    object.write = function () {
+                        try {
+                            assembleChunks(object, objectType, bodyArray, maxHttpLogBodyLength, arguments[0], false);
+                            return original.apply(this, arguments);
+                        } catch (err) {
+                            errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.patchObjectDotFunctions.case.write' });
+                            return original.apply(this, arguments);
+                        }
+                    };
+                    break;
+                }
+            case 'end':
+                {
+                    const original = object.end;
+                    object.end = function () {
+                        try {
+                            assembleChunks(object, objectType, bodyArray, maxHttpLogBodyLength, arguments[0], true);
+                            return original.apply(this, arguments);
+                        } catch (err) {
+                            errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.patchObjectDotFunctions.case.end' });
+                            return original.apply(this, arguments);
+                        }
+                    };
+                    break;
+                }
+            case 'assemble':
+                {
+                    assembleChunks(object, objectType, bodyArray, maxHttpLogBodyLength, chunk, assembleBody);
+                };
+                break;
+            case 'send':
+                {
+                    const original = object.send;
+                    object.send = function (body) {
+                        try {
+                            objectType == 'req' ? object.reqBody = body : object.resBody = body;
+                            return original.apply(this, arguments);
+                        } catch (err) {
+                            errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.patchObjectDotFunctions.case.send' });
+                            return original.apply(this, arguments);
+                        }
+                    };
+                }
+            default:
+                throw new elasticError({}); //set this to apt value
+        };
+    } catch (err) {
+        errorHandler({ err, ship: false, scope: '@niccsj/elastic-logger.patchObjectDotFunctions' });
+    }
+};
+
 module.exports = {
     checkSuppliedArguments,
     shipDataToElasticsearch,
+    isObjEmpty,
+    isLogBodyEnabled,
+    getLogBody,
+    assembleChunks,
+    patchObjectDotFunctions
 };

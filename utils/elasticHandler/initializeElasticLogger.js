@@ -4,7 +4,7 @@ const { checkSuppliedArguments } = require('../utilities');
 const { errorHandler } = require('../errorHandler');
 const { setUpILM, putIndexTemplate, putDefaultComponetTemplate } = require('../elasticHandler/elasticApi');
 const { overwriteHttpProtocol } = require('../../logger/outGoingApiLogger');
-const { defaultIlmPolicyValues, defaultIndexTemplateValues, defaultInitializationValues, defaultKibanaValues, dynamicTemplateComponentTemplateSettings, metadataCompomentTempalteSettings } = require('../constants');
+const { defaultIlmPolicyValues, defaultIndexTemplateValues, defaultInitializationValues, defaultKibanaValues, dynamicTemplateComponentTemplateSettings, metadataCompomentTempalteSettings, debug } = require('../constants');
 
 const connection = async (esConnObj) => {
 	try {
@@ -29,26 +29,26 @@ const connection = async (esConnObj) => {
 };
 
 /**
- * Bootstraps the `elastic-looger`. Initialises the `outgoing api logger`. Sets up bootstrap `index` and `ILM`.
- * @param {object} i This defaults to values from `initialisation` object if specified else from `constants.js` - an Object that has 13 properties.
+ * Bootstraps the `elastic-logger`. Initializes the `outgoing api logger`. Sets up bootstrap `index` and `ILM`.
+ * @param {object} i This defaults to values from `initialization` object if specified else from `constants.js` - an Object that has 13 properties.
  * @param {object=} [i.esConnObj] - (Optional) The connection object. Defaults to values from constants.js
  * @param {string=} [i.microServiceName] - (Optional) Name of microService. Defaults to constants.js
  * @param {string=} [i.brand_name] - (Optional) Name of brand. Defaults to constants.js
  * @param {string=} [i.cs_env] - (Optional) The environment name. Defaults to constants.js
  * @param {number=} [i.batchSize] - (Optional) Size of batch. Defaults to constants.js
- * @param {string=} [i.timezone] - (Optional) Timezone to be used by moment. Defaults to values from initialisation object if specified else constants.js
- * @param {object=} [i.ilmObject] - (Optional) Object specifing ILM settings. Defaults to constants.js
- * @param {object=} [i.indexSettings] - (Optional) Object specifing index template settings. Defaults to constants.js
+ * @param {string=} [i.timezone] - (Optional) Timezone to be used by moment. Defaults to values from initialization object if specified else constants.js
+ * @param {object=} [i.ilmObject] - (Optional) Object specifying ILM settings. Defaults to constants.js
+ * @param {object=} [i.indexSettings] - (Optional) Object specifying index template settings. Defaults to constants.js
  * @param {boolean=} [i.exportApiLogs] - (Optional) Bool to enable outgoing api logger. Defaults to true
  *
  */
 
-const initializeElasticLogger = async ({ esConnObj, brand_name, cs_env, microServiceName, batchSize, timezone, ilmObject = {}, indexSettings = {}, exportApiLogs = true }) => {
+const initializeElasticLogger = async ({ esConnObj, brand_name, cs_env, microServiceName, batchSize, timezone, ilmObject = {}, indexSettings = {}, maxHttpLogBodyLength, exportApiLogs = true, ship = true }) => {
 	try {
 		let { size, hotDuration, warmAfter, deleteAfter, shrinkShards, overwriteILM } = ilmObject;
 		let { primaryShards, replicaShards, priority, overwrite } = indexSettings;
 		let { kibanaUrl } = defaultKibanaValues;
-		let { dynamicMappings } = dynamicTemplateComponentTemplateSettings;
+		let { dynamicMappings, dynamicSettings, overwriteDynamicTemplate } = dynamicTemplateComponentTemplateSettings;
 		let { overwriteMappings, metadataMappings } = metadataCompomentTempalteSettings;
 
 		//set up values/defaults for initialization from constants
@@ -59,6 +59,7 @@ const initializeElasticLogger = async ({ esConnObj, brand_name, cs_env, microSer
 		microServiceName = microServiceName ? microServiceName : defaultInitializationValues.microServiceName;
 		batchSize = batchSize ? batchSize : defaultInitializationValues.batchSize;
 		timezone = timezone ? timezone : defaultInitializationValues.timezone;
+		maxHttpLogBodyLength = maxHttpLogBodyLength ?? defaultInitializationValues.maxHttpLogBodyLength;
 
 		//setup values/defaults from index template
 		primaryShards = primaryShards ? primaryShards : defaultIndexTemplateValues.number_of_shards;
@@ -81,8 +82,9 @@ const initializeElasticLogger = async ({ esConnObj, brand_name, cs_env, microSer
 		if (initializerValid) {
 			if (esClientObj && !esClientObj.client) esClientObj.client = await connection(esConnObj);
 			esClientObj.status = true;
-			esClientObj.defaultLoggerDetails = { esConnObj, brand_name, cs_env, microServiceName, batchSize, timezone };
+			esClientObj.defaultLoggerDetails = { esConnObj, brand_name, cs_env, microServiceName, batchSize, timezone, maxHttpLogBodyLength };
 			console.log('-----------------------ELASTIC-LOGGER INITIALIZED-----------------------');
+			if (debug) console.log('\n<><><><> DEBUG <><><><>\nES CLIENT OBJ DEFAULT LOGGER DETAILS: ', JSON.stringify(esClientObj.defaultLoggerDetails, null, 4), '\n<><><><> DEBUG <><><><>\n');
 
 			if (kibanaUrl) {
 				console.log('-----------------------KIBANA APIs ENABLED-----------------------');
@@ -91,10 +93,10 @@ const initializeElasticLogger = async ({ esConnObj, brand_name, cs_env, microSer
 			}
 
 			setUpILM({ policyName, size, hotDuration, warmAfter, deleteAfter, shrinkShards, overwriteILM });
-			putDefaultComponetTemplate({ componentTemplateName: "common_dynamic_template_component_template", mappings: dynamicMappings, overwriteMappings: false });
+			putDefaultComponetTemplate({ componentTemplateName: "common_dynamic_template_component_template", mappings: dynamicMappings, settings: dynamicSettings, overwriteMappings: overwriteDynamicTemplate });
 			putDefaultComponetTemplate({ componentTemplateName: "common_metadata_component_template", mappings: metadataMappings, overwriteMappings });
 			putIndexTemplate({ brand_name, cs_env, microServiceName, primaryShards, replicaShards, priority, overwrite, dynamicMappings, metadataMappings, overwriteMappings });
-			if (exportApiLogs) overwriteHttpProtocol({ microServiceName, brand_name, cs_env, batchSize, timezone, elasticUrl, kibanaUrl });
+			if (exportApiLogs) overwriteHttpProtocol({ microServiceName, brand_name, cs_env, batchSize, timezone, maxHttpLogBodyLength, elasticUrl, kibanaUrl, ship });
 			return true;
 		}
 	} catch (err) {
